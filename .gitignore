@@ -1,0 +1,49 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Python and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.cache/
+*.egg-info/
+
+# Conda and local environments
+.conda/
+.venv/
+
+# Downloaded model assets and generated outputs
+models/*
+!models/README.md
+*.ckpt
+*.bin
+*.gguf
+*.onnx
+*.safetensors
+*.pth
+*.pth.*
+*.pt
+*.pt.*
+*.r50
+/results/
+/experiment_runs/
+/static_scenarios/
+/test_cases/
+/seeds/
+/optimization_*/
+/baselines/drivefuzz/src/seed-vlad/
+/baselines/drivefuzz/src/out-*/
+
+# Logs and CARLA runtime files
+*.log
+carla_logs/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo

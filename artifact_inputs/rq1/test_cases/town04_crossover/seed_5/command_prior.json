@@ -1,0 +1,11 @@
+{
+  "instruction": "Follow the lane and turn left at the intersection.",
+  "commands": [
+    "Follow the lane and turn left at the intersection."
+  ],
+  "mode": "route_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_prior.txt",
+  "created_at": "2026-05-15T21:05:21.539825",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Follow the lane and turn left at the intersection.\"\n  ]\n}\n```"
+}

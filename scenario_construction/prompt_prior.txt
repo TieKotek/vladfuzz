@@ -1,0 +1,58 @@
+[CONTEXT]
+
+You are generating natural-language navigation commands for testing Vision-Language-Action autonomous driving systems.
+
+The test case contains two inputs:
+
+1. A first-person driving image. The image may contain a marker labeled "TARGET" or a green target dot. This marker is only an annotation for you and is invisible to the driving model under test.
+2. A structured route prior. The prior lists the ordered maneuver steps needed to reach the intended goal in the current driving scene.
+
+[TASK]
+
+Generate {num_commands} natural English navigation commands for the same test case. Each command should describe the intended driving task in a way a human passenger might say to an autonomous vehicle.
+
+Use the route prior as the authoritative source for the maneuver sequence. Use the image to decide the road context and choose the most natural high-level wording for that context. The final command should sound like what a passenger would naturally say, not a literal translation of route-planner actions. If the image and route prior appear ambiguous, prefer a conservative command that preserves the route prior without adding unsupported details.
+
+[LANGUAGE STYLE]
+
+Write each command at the highest natural navigation level supported by the image and route prior. Do not describe your reasoning or scene interpretation.
+
+Prefer human driving intents over low-level maneuver names:
+
+- If the route moves from a highway or main road onto an exit ramp, say "take the exit" or "exit the highway", not "turn right at the road ahead".
+- If the route follows a ramp onto a highway or main road, say "merge onto the highway" or "merge onto the main road", not just "turn left" or "turn right".
+- If the route goes through a roundabout, say "enter the roundabout" and, when appropriate, "take the exit" rather than describing it as a generic turn.
+- If the route stays on the same road through a bend, say "follow the road" rather than "turn".
+- Use "turn left" or "turn right" mainly for ordinary intersections, T-junctions, and clearly local street turns.
+
+Use the image to choose the most natural road-context term: highway exit, ramp, merge, intersection, roundabout, lane change, or lane following. Do not use a generic intersection command when a more specific road-context command is visually supported. Avoid template-like commands that describe only geometric motion, such as "turn right at the road ahead", when the scene supports a more natural navigation intent such as exiting, merging, following a ramp, or entering a roundabout.
+
+[COMMAND REQUIREMENTS]
+
+- Each command must be semantically valid for the provided driving scene and route prior.
+- Generate exactly {num_commands} commands.
+- Preserve the order of meaningful maneuvers from the route prior, including turns, lane changes, merges, exits, and intersection movements.
+- Ignore low-level distance-only steps such as "Follow lane for 7.01 meters" unless they are needed to connect meaningful maneuvers.
+- If a lane change is required, explicitly state the number of lanes and direction.
+- Keep each command concise: one sentence is preferred, two short sentences are acceptable, and the command should normally stay under 45 words.
+- Make the commands paraphrases of the same intended task, not different tasks.
+- Do not mention that a route prior was provided.
+- Do not mention the target marker, target dot, or any visual annotation.
+- Do not add traffic rules, traffic light states, signs, hazards, or safety advice unless they are part of the navigation instruction itself.
+- Avoid robotic wording such as "execute step one" or "according to the route description".
+
+[OUTPUT FORMAT]
+
+Return only one valid JSON object with this exact schema:
+
+{
+  "commands": [
+    "command 1",
+    "command 2",
+    "..."
+  ]
+}
+
+Do not wrap the JSON in Markdown. Do not include explanations before or after the JSON.
+
+[ROUTE PRIOR]

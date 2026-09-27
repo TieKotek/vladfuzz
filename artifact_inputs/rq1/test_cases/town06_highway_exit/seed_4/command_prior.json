@@ -1,0 +1,11 @@
+{
+  "instruction": "Change one lane to the right and proceed straight at the intersection.",
+  "commands": [
+    "Change one lane to the right and proceed straight at the intersection."
+  ],
+  "mode": "route_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_prior.txt",
+  "created_at": "2026-05-15T22:04:01.592512",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Change one lane to the right and proceed straight at the intersection.\"\n  ]\n}\n```"
+}

@@ -1,0 +1,11 @@
+{
+  "instruction": "Follow the road as it curves to the left.",
+  "commands": [
+    "Follow the road as it curves to the left."
+  ],
+  "mode": "no_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_no_prior.txt",
+  "created_at": "2026-05-15T21:01:58.638247",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Follow the road as it curves to the left.\"\n  ]\n}\n```"
+}

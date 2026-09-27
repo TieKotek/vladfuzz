@@ -1,0 +1,11 @@
+{
+  "instruction": "Drive straight down the road towards the silos and turn right at the intersection.",
+  "commands": [
+    "Drive straight down the road towards the silos and turn right at the intersection."
+  ],
+  "mode": "route_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_prior.txt",
+  "created_at": "2026-05-15T22:11:46.155857",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Drive straight down the road towards the silos and turn right at the intersection.\"\n  ]\n}\n```"
+}

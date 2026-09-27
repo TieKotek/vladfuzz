@@ -1,0 +1,11 @@
+{
+  "instruction": "Drive straight and turn right at the intersection.",
+  "commands": [
+    "Drive straight and turn right at the intersection."
+  ],
+  "mode": "route_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_prior.txt",
+  "created_at": "2026-05-15T20:41:11.486658",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Drive straight and turn right at the intersection.\"\n  ]\n}\n```"
+}

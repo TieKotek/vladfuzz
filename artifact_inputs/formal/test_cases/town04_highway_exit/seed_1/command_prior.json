@@ -1,0 +1,11 @@
+{
+  "instruction": "Take the exit on the right.",
+  "commands": [
+    "Take the exit on the right."
+  ],
+  "mode": "route_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_prior.txt",
+  "created_at": "2026-05-22T17:02:20.501558",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Take the exit on the right.\"\n  ]\n}\n```"
+}

@@ -1,0 +1,11 @@
+{
+  "instruction": "Drive straight ahead and then change to the left lane.",
+  "commands": [
+    "Drive straight ahead and then change to the left lane."
+  ],
+  "mode": "route_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_prior.txt",
+  "created_at": "2026-05-15T21:21:16.514039",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Drive straight ahead and then change to the left lane.\"\n  ]\n}\n```"
+}

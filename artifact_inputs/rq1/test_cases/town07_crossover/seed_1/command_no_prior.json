@@ -1,0 +1,11 @@
+{
+  "instruction": "Turn left at the stop sign.",
+  "commands": [
+    "Turn left at the stop sign."
+  ],
+  "mode": "no_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_no_prior.txt",
+  "created_at": "2026-05-15T22:10:10.739154",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Turn left at the stop sign.\"\n  ]\n}\n```"
+}

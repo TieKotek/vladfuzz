@@ -1,0 +1,11 @@
+{
+  "instruction": "Turn right at the intersection.",
+  "commands": [
+    "Turn right at the intersection."
+  ],
+  "mode": "no_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_no_prior.txt",
+  "created_at": "2026-05-15T20:39:50.616951",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Turn right at the intersection.\"\n  ]\n}\n```"
+}

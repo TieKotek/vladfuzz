@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "id": "lmdrive-llava-base",
+      "backend": "lmdrive",
+      "method": "huggingface_snapshot",
+      "repo_id": "liuhaotian/llava-v1.5-7b",
+      "revision": "4481d270cc22fd5c4d1bb5df129622006ccd9234",
+      "destination": "lmdrive/llava-v1.5-7b",
+      "required_files": [
+        "config.json",
+        "pytorch_model-00001-of-00002.bin",
+        "pytorch_model-00002-of-00002.bin",
+        "pytorch_model.bin.index.json",
+        "tokenizer.model"
+      ]
+    },
+    {
+      "id": "lmdrive-checkpoint",
+      "backend": "lmdrive",
+      "method": "huggingface_file",
+      "repo_id": "OpenDILabCommunity/LMDrive-llava-v1.5-7b-v1.0",
+      "revision": "081ca1b028c73ceb83918a0b45a5e7c5322b26a8",
+      "source_file": "llava-v1.5-checkpoint.pth",
+      "destination": "lmdrive/llava-v1.5-checkpoint.pth",
+      "size": 946473021,
+      "sha256": "1d3c934a4cc44a35ee92ab8b26b3578d151e39a3f21804f41b12ff31cbff0091"
+    },
+    {
+      "id": "lmdrive-vision-encoder",
+      "backend": "lmdrive",
+      "method": "huggingface_file",
+      "repo_id": "OpenDILabCommunity/LMDrive-vision-encoder-r50-v1.0",
+      "revision": "ce055800ef3a458bad5b7fff18ed52034edcea45",
+      "source_file": "vision-encoder-r50.pth.tar",
+      "destination": "lmdrive/vision-encoder-r50.pth.tar",
+      "size": 376584921,
+      "sha256": "718c7f1acae1607dc35355b1782685e29c98d65233de83fa8a6309ed6df6076a"
+    },
+    {
+      "id": "simlingo-checkpoint",
+      "backend": "simlingo",
+      "method": "huggingface_file",
+      "repo_id": "RenzKa/simlingo",
+      "revision": "26c7c89e797d4e25bbf640013317af8da26a5454",
+      "source_file": "simlingo/checkpoints/epoch=013.ckpt/pytorch_model.pt",
+      "destination": "simlingo/pytorch_model.pt",
+      "size": 2569679322,
+      "sha256": "ec8943723d266ee9f5f56f45d153a163b22616960bfccb741965ea5daa700d28"
+    },
+    {
+      "id": "simlingo-internvl-base",
+      "backend": "simlingo",
+      "method": "huggingface_snapshot",
+      "repo_id": "OpenGVLab/InternVL2-1B",
+      "revision": "0d75ccd166b1d0b79446ae6c5d1a4a667f1e6187",
+      "destination": "simlingo/InternVL2-1B",
+      "required_files": [
+        "config.json",
+        "model.safetensors",
+        "modeling_internvl_chat.py",
+        "preprocessor_config.json",
+        "tokenizer_config.json"
+      ]
+    },
+    {
+      "id": "bevdriver-llama-base",
+      "backend": "bevdriver",
+      "method": "huggingface_snapshot",
+      "repo_id": "huggyllama/llama-7b",
+      "revision": "4782ad278652c7c71b72204d462d6d01eaaf7549",
+      "destination": "bevdriver/llama-7b",
+      "allow_patterns": [
+        "*.json",
+        "*.model",
+        "*.safetensors",
+        "LICENSE",
+        "README.md"
+      ],
+      "required_files": [
+        "config.json",
+        "model-00001-of-00002.safetensors",
+        "model-00002-of-00002.safetensors",
+        "model.safetensors.index.json",
+        "tokenizer.model"
+      ]
+    },
+    {
+      "id": "shared-bert-base",
+      "backends": ["lmdrive", "bevdriver"],
+      "method": "huggingface_snapshot",
+      "repo_id": "google-bert/bert-base-uncased",
+      "revision": "fa0b660772177cf2f142cd76b0b1ac0c76d44555",
+      "destination": "shared/bert-base-uncased",
+      "allow_patterns": [
+        "*.json",
+        "*.txt",
+        "*.safetensors",
+        "LICENSE",
+        "README.md"
+      ],
+      "required_files": [
+        "config.json",
+        "model.safetensors",
+        "tokenizer_config.json",
+        "vocab.txt"
+      ]
+    },
+    {
+      "id": "bevdriver-full-model",
+      "backend": "bevdriver",
+      "method": "manual",
+      "source_url": "https://syncandshare.lrz.de/getlink/fiWRzThZRF4xY6DN2Ets7/Main%20Model%20Llama-7b",
+      "destination": "bevdriver/bevdriver-model.pth",
+      "size": 3058237670,
+      "sha256": "bc7b9fe787857b4e7d90bc115a7c403da52913711feb62c718e761594310ef9f"
+    },
+    {
+      "id": "bevdriver-bev-encoder",
+      "backend": "bevdriver",
+      "method": "manual",
+      "source_url": "https://syncandshare.lrz.de/getlink/fijcZ1H9GEXafEyQjBKUf/BEV%20Encoder%20with%20Traffic%20Light%20Loss",
+      "destination": "bevdriver/bev-encoder.pth",
+      "size": 645341213,
+      "sha256": "591072c4e267c202d8dd0d95ab438355f66987a2ffe1af43390507d0d5666741"
+    }
+  ]
+}

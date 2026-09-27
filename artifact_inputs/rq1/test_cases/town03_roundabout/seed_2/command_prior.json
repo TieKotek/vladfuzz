@@ -1,0 +1,11 @@
+{
+  "instruction": "Take the first exit at the roundabout.",
+  "commands": [
+    "Take the first exit at the roundabout."
+  ],
+  "mode": "route_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_prior.txt",
+  "created_at": "2026-05-15T20:54:29.597919",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Take the first exit at the roundabout.\"\n  ]\n}\n```"
+}

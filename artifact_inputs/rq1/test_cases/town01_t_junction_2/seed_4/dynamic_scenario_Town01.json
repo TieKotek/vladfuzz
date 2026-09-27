@@ -1,0 +1,242 @@
+{
+    "duration_frames": 500,
+    "scenario_area": {
+        "center": {
+            "x": 93.0,
+            "y": 58.0
+        },
+        "extent": {
+            "x": 40.0,
+            "y": 40.0
+        }
+    },
+    "map_name": "Carla/Maps/Town01",
+    "ego_spawn_num": 13,
+    "ego_car": {
+        "blueprint": "vehicle.tesla.model3",
+        "spawn_point_index": 10
+    },
+    "npc_vehicle_count": 0,
+    "npc_vehicles": [],
+    "target_point": {
+        "x": -0.62,
+        "y": -11.85,
+        "z": 0.5
+    },
+    "route_info": {
+        "route_length": 22.43,
+        "route_waypoints": [
+            {
+                "index": 0,
+                "location": {
+                    "x": 110.99,
+                    "y": 55.5,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": 179.99,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 1,
+                "location": {
+                    "x": 108.99,
+                    "y": 55.5,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": 179.99,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 2,
+                "location": {
+                    "x": 106.99,
+                    "y": 55.5,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": 179.99,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 3,
+                "location": {
+                    "x": 104.99,
+                    "y": 55.5,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": 179.99,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 4,
+                "location": {
+                    "x": 101.39,
+                    "y": 55.5,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": 179.99,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 5,
+                "location": {
+                    "x": 101.39,
+                    "y": 55.5,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": 179.99,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "RIGHT"
+            },
+            {
+                "index": 6,
+                "location": {
+                    "x": 99.42,
+                    "y": 55.5,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -179.25,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "RIGHT"
+            },
+            {
+                "index": 7,
+                "location": {
+                    "x": 97.83,
+                    "y": 55.32,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -167.7,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "RIGHT"
+            },
+            {
+                "index": 8,
+                "location": {
+                    "x": 96.32,
+                    "y": 54.82,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -156.14,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "RIGHT"
+            },
+            {
+                "index": 9,
+                "location": {
+                    "x": 94.93,
+                    "y": 54.03,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -144.59,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "RIGHT"
+            },
+            {
+                "index": 10,
+                "location": {
+                    "x": 93.79,
+                    "y": 53.02,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -131.08,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "RIGHT"
+            },
+            {
+                "index": 11,
+                "location": {
+                    "x": 92.97,
+                    "y": 51.79,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -116.29,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "RIGHT"
+            },
+            {
+                "index": 12,
+                "location": {
+                    "x": 92.49,
+                    "y": 50.39,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -101.5,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "RIGHT"
+            },
+            {
+                "index": 13,
+                "location": {
+                    "x": 92.38,
+                    "y": 48.8,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.01,
+                    "pitch": 360.0,
+                    "roll": 0.0
+                },
+                "maneuver": "RIGHT"
+            }
+        ],
+        "route_description": [
+            "Prepare to turn right at intersection"
+        ],
+        "basic_instruction": "Turn right at intersection."
+    },
+    "seed_generation": {
+        "strategy": "diverse",
+        "candidate_id": "ego10_target0",
+        "candidate_group": "193::1::FOLLOW_LANE>RIGHT",
+        "ego_road_id": 9,
+        "ego_lane_id": 1,
+        "target_road_id": 193,
+        "target_lane_id": 1,
+        "route_signature": "FOLLOW_LANE>RIGHT",
+        "direct_distance": 20.29
+    }
+}

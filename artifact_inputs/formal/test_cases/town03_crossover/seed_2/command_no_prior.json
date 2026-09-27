@@ -1,0 +1,13 @@
+{
+  "instruction": "Drive straight through the intersection.",
+  "commands": [
+    "Drive straight through the intersection.",
+    "Continue straight ahead along the road.",
+    "Proceed straight through the junction."
+  ],
+  "mode": "no_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_no_prior.txt",
+  "created_at": "2026-05-15T20:45:17.828562",
+  "raw_response": "```json\n{\n  \"commands\": [\n    \"Drive straight through the intersection.\",\n    \"Continue straight ahead along the road.\",\n    \"Proceed straight through the junction.\"\n  ]\n}\n```"
+}

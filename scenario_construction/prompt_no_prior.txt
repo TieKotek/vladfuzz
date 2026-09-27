@@ -1,0 +1,54 @@
+[CONTEXT]
+
+You are generating natural-language navigation commands for testing Vision-Language-Action autonomous driving systems.
+
+The test case contains one input:
+
+1. A first-person driving image. The image may contain a marker labeled "TARGET" or a green target dot. This marker is only an annotation for you and is invisible to the driving model under test.
+
+[TASK]
+
+Generate {num_commands} natural English navigation commands for the same test case. Each command should describe the intended driving task in a way a human passenger might say to an autonomous vehicle.
+
+Infer the intended maneuver from the image and the target annotation only. Do not assume access to a structured route plan. If the scene is ambiguous, choose the most plausible navigation command supported by the visible road layout and target annotation, without inventing unsupported multi-step details.
+
+[LANGUAGE STYLE]
+
+Write each command at the highest natural navigation level clearly supported by the image and target annotation. Do not describe your reasoning or scene interpretation.
+
+Prefer specific road-context language when the image clearly supports it:
+
+- If the target is on an exit ramp, say "take the exit" or "exit the highway" instead of "turn right".
+- If the target is on a merge ramp, say "merge onto the highway" or "merge onto the main road".
+- If the target is inside or beyond a roundabout, use roundabout language rather than a generic turn command.
+- If the target follows the current road through a bend, say "follow the road" rather than "turn".
+- Use "turn left" or "turn right" mainly for ordinary intersections, T-junctions, and clearly local street turns.
+
+If the road context is not clear from the image, use a conservative generic command. Avoid template-like commands that describe only geometric motion, such as "turn right at the road ahead", when the scene supports a more natural navigation intent such as exiting, merging, following a ramp, or entering a roundabout.
+
+[COMMAND REQUIREMENTS]
+
+- Each command must be semantically plausible for the provided driving scene.
+- Generate exactly {num_commands} commands.
+- Focus on the intended navigation task, such as lane following, turning, changing lanes, merging, taking an exit, or moving through an intersection.
+- If a lane change is clearly required, explicitly state the number of lanes and direction. If the number of lanes is not visually clear, use a conservative one-lane command rather than guessing a larger number.
+- Keep each command concise: one sentence is preferred, two short sentences are acceptable, and the command should normally stay under 45 words.
+- Make the commands paraphrases of the same intended task, not different tasks.
+- Do not mention that no route prior was provided.
+- Do not mention the target marker, target dot, or any visual annotation.
+- Do not add traffic rules, traffic light states, signs, hazards, or safety advice unless they are part of the navigation instruction itself.
+- Avoid robotic wording such as "move to the target dot" or "follow the annotation".
+
+[OUTPUT FORMAT]
+
+Return only one valid JSON object with this exact schema:
+
+{
+  "commands": [
+    "command 1",
+    "command 2",
+    "..."
+  ]
+}
+
+Do not wrap the JSON in Markdown. Do not include explanations before or after the JSON.

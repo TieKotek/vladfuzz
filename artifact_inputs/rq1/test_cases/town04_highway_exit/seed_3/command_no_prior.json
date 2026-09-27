@@ -1,0 +1,11 @@
+{
+  "instruction": "Continue straight along the exit ramp.",
+  "commands": [
+    "Continue straight along the exit ramp."
+  ],
+  "mode": "no_prior",
+  "generator_model": "qwen3.6-plus-2026-04-02",
+  "prompt_path": "scenerio_construction/prompt_no_prior.txt",
+  "created_at": "2026-05-15T21:12:17.985246",
+  "raw_response": "{\n  \"commands\": [\n    \"Continue straight along the exit ramp.\"\n  ]\n}"
+}

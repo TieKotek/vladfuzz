@@ -1,0 +1,510 @@
+{
+    "duration_frames": 500,
+    "scenario_area": {
+        "center": {
+            "x": 0.0,
+            "y": 245.0
+        },
+        "extent": {
+            "x": 50.0,
+            "y": 50.0
+        }
+    },
+    "map_name": "Carla/Maps/Town06",
+    "ego_spawn_num": 53,
+    "ego_car": {
+        "blueprint": "vehicle.tesla.model3",
+        "spawn_point_index": 35
+    },
+    "npc_vehicle_count": 0,
+    "npc_vehicles": [],
+    "target_point": {
+        "x": 4.56,
+        "y": -49.4,
+        "z": 0.5
+    },
+    "route_info": {
+        "route_length": 70.0,
+        "route_waypoints": [
+            {
+                "index": 0,
+                "location": {
+                    "x": 9.16,
+                    "y": 269.0,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 1,
+                "location": {
+                    "x": 9.13,
+                    "y": 267.0,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 2,
+                "location": {
+                    "x": 9.09,
+                    "y": 265.0,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 3,
+                "location": {
+                    "x": 9.06,
+                    "y": 262.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 4,
+                "location": {
+                    "x": 9.06,
+                    "y": 262.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 5,
+                "location": {
+                    "x": 9.03,
+                    "y": 260.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 6,
+                "location": {
+                    "x": 9.0,
+                    "y": 258.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 7,
+                "location": {
+                    "x": 8.97,
+                    "y": 256.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 8,
+                "location": {
+                    "x": 8.94,
+                    "y": 254.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 9,
+                "location": {
+                    "x": 8.9,
+                    "y": 252.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 10,
+                "location": {
+                    "x": 8.87,
+                    "y": 250.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 11,
+                "location": {
+                    "x": 8.84,
+                    "y": 248.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 12,
+                "location": {
+                    "x": 8.81,
+                    "y": 246.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 13,
+                "location": {
+                    "x": 8.78,
+                    "y": 244.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 14,
+                "location": {
+                    "x": 8.75,
+                    "y": 242.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 15,
+                "location": {
+                    "x": 8.72,
+                    "y": 240.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 16,
+                "location": {
+                    "x": 8.68,
+                    "y": 238.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 17,
+                "location": {
+                    "x": 8.65,
+                    "y": 236.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 18,
+                "location": {
+                    "x": 8.62,
+                    "y": 234.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 19,
+                "location": {
+                    "x": 8.59,
+                    "y": 232.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 20,
+                "location": {
+                    "x": 8.56,
+                    "y": 230.98,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 21,
+                "location": {
+                    "x": 8.5,
+                    "y": 227.46,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "STRAIGHT"
+            },
+            {
+                "index": 22,
+                "location": {
+                    "x": 8.5,
+                    "y": 227.46,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "CHANGE_LANE_LEFT"
+            },
+            {
+                "index": 23,
+                "location": {
+                    "x": 4.81,
+                    "y": 215.52,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "CHANGE_LANE_LEFT"
+            },
+            {
+                "index": 24,
+                "location": {
+                    "x": 4.81,
+                    "y": 215.52,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 25,
+                "location": {
+                    "x": 4.78,
+                    "y": 213.52,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 26,
+                "location": {
+                    "x": 4.75,
+                    "y": 211.52,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 27,
+                "location": {
+                    "x": 4.72,
+                    "y": 209.52,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 28,
+                "location": {
+                    "x": 4.69,
+                    "y": 207.52,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.9,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 29,
+                "location": {
+                    "x": 4.66,
+                    "y": 205.52,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": 269.13,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 30,
+                "location": {
+                    "x": 4.63,
+                    "y": 203.55,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": 269.36,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 31,
+                "location": {
+                    "x": 4.61,
+                    "y": 201.56,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.53,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            },
+            {
+                "index": 32,
+                "location": {
+                    "x": 4.59,
+                    "y": 199.56,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "yaw": -90.53,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                },
+                "maneuver": "FOLLOW_LANE"
+            }
+        ],
+        "route_description": [
+            "Prepare to go straight at intersection",
+            "Start changing left 1 lane(s)",
+            "Follow lane for 15.96 meters"
+        ],
+        "basic_instruction": "Go straight at intersection then change lane to the left then follow current lane for a while."
+    },
+    "seed_generation": {
+        "strategy": "diverse",
+        "candidate_id": "ego35_target32",
+        "candidate_group": "34::-1::FOLLOW_LANE>STRAIGHT>CHANGE_LANE_LEFT>FOLLOW_LANE",
+        "ego_road_id": 33,
+        "ego_lane_id": -2,
+        "target_road_id": 34,
+        "target_lane_id": -1,
+        "route_signature": "FOLLOW_LANE>STRAIGHT>CHANGE_LANE_LEFT>FOLLOW_LANE",
+        "direct_distance": 74.31
+    }
+}
