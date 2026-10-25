@@ -174,5 +174,7 @@ RQ-specific programs under `evaluation/` consume generated `results/rqN/`
 trees. RQ2 keeps raw method executions under `results/rq2/runs/` and derived
 summaries, tables, paper assets, and diversity outputs in sibling directories.
 RQ4 reads the frozen VLAD-Fuzz selection from `results/rq2/paper/` rather than
-running or copying a separate campaign. Paper figures and result archives are
-intentionally deferred until the data portion of the artifact is assembled.
+running or copying a separate campaign. The frozen paper records are available
+in the separate [evaluation data repository](https://anonymous.4open.science/r/vladfuzz-data-5F73/).
+Use [Paper result data](PAPER_DATA.md) for its integrity checks and statistical
+recomputation commands; keep the frozen data separate from newly generated runs.

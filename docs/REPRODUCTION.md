@@ -218,9 +218,10 @@ pass that step before claiming full backend reproducibility.
 - Commit the complete source, tests, documentation, and frozen inputs; no keys,
   model weights, local caches, temporary files, or generated results.
 - Validate the release from a clean checkout/environment and tag that commit.
-- Publish original-result archives separately with checksums, explicit run
-  selections, and audit records if exact paper-table verification is offered.
 
 These items remain pending until evidence or authorization is available. A
 source-only checkout supports new experiments but does not by itself contain
 all archived evidence needed to regenerate the paper's exact reported numbers.
+The frozen records, run selections, checksums, and audit records are available
+in the separate [evaluation data repository](https://anonymous.4open.science/r/vladfuzz-data-5F73/).
+See [Paper result data](PAPER_DATA.md) for offline verification.

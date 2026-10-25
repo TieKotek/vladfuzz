@@ -90,6 +90,8 @@ results/rq2/paper/, and results/rq2/diversity/. RQ4 reads the frozen
 VLAD-Fuzz run selection from results/rq2/paper/; it does not require a
 separate driving campaign. reanalyze_instruction_cf_diversity is a historical
 comparison utility requiring a previous selection and embedding cache, not a
-prerequisite for a fresh analysis. Original result archives are not bundled
-with source and their release remains a separate task; do not expect newly
-generated stochastic runs to reproduce the paper's counts exactly.
+prerequisite for a fresh analysis. Frozen paper results are available in the
+separate [evaluation data repository](https://anonymous.4open.science/r/vladfuzz-data-5F73/);
+see [Paper result data](../../docs/PAPER_DATA.md) for verification instructions.
+Do not expect newly generated stochastic runs to reproduce the paper's counts
+exactly.

@@ -313,8 +313,10 @@ experimental reproduction, the repository additionally provides:
 - analysis programs under `evaluation/rq1/` through `evaluation/rq4/`;
 - scripts that summarize generated runs under `results/rq*/`.
 
-Precomputed result archives are not required to run VLAD-Fuzz and are not
-currently stored in the source repository. See
+The frozen paper results are available in the separate
+[VLAD-Fuzz Evaluation Data repository](https://anonymous.4open.science/r/vladfuzz-data-5F73/).
+They are not required to run VLAD-Fuzz. See [Paper result data](docs/PAPER_DATA.md)
+for data contents, integrity checks, and offline statistical verification, and
 [`docs/WORKFLOW.md`](docs/WORKFLOW.md) for the complete construction, batch,
 baseline, ablation, and analysis workflow.
 
@@ -327,6 +329,7 @@ baseline, ablation, and analysis workflow.
 - [Architecture and backend integration](docs/ARCHITECTURE.md)
 - [Baseline implementations](docs/BASELINES.md)
 - [Reproduction settings and verification status](docs/REPRODUCTION.md)
+- [Paper result data and offline verification](docs/PAPER_DATA.md)
 - [Contributing](CONTRIBUTING.md)
 - [Third-party code and licenses](THIRD_PARTY.md)
 
