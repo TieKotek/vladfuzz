@@ -16,7 +16,10 @@ python scripts/prepare_models.py --backend bevdriver --accept-model-licenses
 ```
 
 Set `HF_TOKEN` when a Hugging Face repository requires authentication. The
-tool honors standard proxy variables but never configures a proxy itself.
+tool reads the repository `.env`, preserves caller environment overrides, and
+honors standard proxy variables without configuring a proxy itself. A supplied
+`--model-root` overrides `VLADFUZZ_MODEL_HOME`; relative model roots are resolved
+from the repository, not the caller's working directory.
 
 ## Official Sources
 
@@ -99,3 +102,14 @@ The known task-specific checkpoint hashes are:
 
 Pinned Hugging Face revisions provide provenance for directory-based assets.
 The validation tool additionally checks the files needed by each backend.
+
+Shared BERT assets may use either `pytorch_model.bin` or `model.safetensors`;
+both preparation and environment checks accept the two supported formats.
+SimLingo also requires `conversation.py` and `processor_config.json` in its
+InternVL directory. During preparation, a missing `processor_config.json` is
+copied from `preprocessor_config.json` as declared in the manifest. Existing
+processor metadata and all weight files are left untouched. `--verify-only`
+never downloads or creates aliases; it reports any missing required files.
+
+The YAML files pin runtime dependencies, but they are not clean-machine lock
+files. See `REPRODUCTION.md` for validation status and outstanding release gates.

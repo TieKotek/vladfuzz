@@ -5,11 +5,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 if [[ -f "$PROJECT_ROOT/.env" ]]; then
-  set -a
-  # .env is user-controlled shell syntax. Keep it private and do not commit it.
-  # shellcheck disable=SC1091
-  source "$PROJECT_ROOT/.env"
-  set +a
+  # Use the Python dotenv parser without executing .env as shell code.
+  if ! _vladfuzz_env_settings="$(
+    "${PYTHON_BIN:-python3}" "$PROJECT_ROOT/vladfuzz_runtime/project_env.py" \
+      --shell "$PROJECT_ROOT/.env"
+  )"; then
+    echo "Cannot load .env; activate a backend environment with python-dotenv." >&2
+    return 1
+  fi
+  eval "$_vladfuzz_env_settings"
+  unset _vladfuzz_env_settings
 fi
 
 CARLA_ROOT="${CARLA_ROOT:-${CARLA_PATH:-}}"

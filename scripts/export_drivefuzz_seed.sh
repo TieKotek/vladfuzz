@@ -5,6 +5,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Load project settings before assigning launcher defaults.
+# shellcheck source=scripts/load_env.sh
+source "$PROJECT_ROOT/scripts/load_env.sh"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 MANIFEST="${MANIFEST:-configs/experiment_manifest.jsonl}"
 MANIFEST_ID="${MANIFEST_ID:-town01_t_junction_1/seed_1}"

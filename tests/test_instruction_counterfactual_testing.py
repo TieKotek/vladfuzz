@@ -116,17 +116,17 @@ class InstructionCounterfactualTestingTest(unittest.TestCase):
         )
         return tester, fake, clock, sampled
 
-    def test_reuses_scenario_for_24_variants_then_samples_next(self):
+    def test_reuses_scenario_for_32_variants_then_samples_next(self):
         with tempfile.TemporaryDirectory() as tmp:
-            tester, fake, _, sampled = self._make_tester(Path(tmp), budget=25.0)
+            tester, fake, _, sampled = self._make_tester(Path(tmp), budget=33.0)
 
             tester.run()
 
-            self.assertEqual(len(fake.calls), 25)
-            self.assertEqual([scenario_id for scenario_id, _ in fake.calls[:24]], ["scenario-0"] * 24)
-            self.assertEqual(fake.calls[24][0], "scenario-1")
+            self.assertEqual(len(fake.calls), 33)
+            self.assertEqual([scenario_id for scenario_id, _ in fake.calls[:32]], ["scenario-0"] * 32)
+            self.assertEqual(fake.calls[32][0], "scenario-1")
             self.assertEqual(len(sampled), 2)
-            self.assertEqual(tester.simulation_count, 25)
+            self.assertEqual(tester.simulation_count, 33)
 
     def test_stops_after_current_simulation_and_keeps_partial_batch(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -157,12 +157,65 @@ class InstructionCounterfactualTestingTest(unittest.TestCase):
             ]
             metadata = json.loads((Path(tester.base_dir) / "metadata.json").read_text(encoding="utf-8"))
             self.assertEqual(len(execution_rows), 4)
-            self.assertEqual(len(generated_rows), 24)
+            self.assertEqual(len(generated_rows), 32)
             self.assertEqual(metadata["total_simulations_executed"], 4)
             self.assertEqual(metadata["total_failures_detected"], 2)
+            self.assertEqual(metadata["total_raw_oracle_positives"], 2)
+            self.assertEqual(metadata["total_provisionally_valid_failures"], 1)
+            self.assertEqual(metadata["total_pending_failure_attribution"], 1)
+            self.assertEqual(metadata["configuration"]["variants_per_complete_scenario_batch"], 32)
             self.assertEqual(metadata["scenario_batches_sampled"], 1)
             self.assertEqual(sum(metadata["family_execution_counts"].values()), 4)
             self.assertEqual(len(metadata["hourly_checkpoints"]), 2)
+
+            audit_rows = [
+                json.loads(line)
+                for line in (Path(tester.base_dir) / "false_positive_audit_candidates.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+            ]
+            self.assertEqual(len(audit_rows), 1)
+            self.assertEqual(audit_rows[0]["family"], "misleading")
+            self.assertEqual(audit_rows[0]["review_status"], "pending_manual_review")
+
+    def test_misleading_failure_requires_audit_before_reporting(self):
+        from vladfuzz_runtime.instruction_cf_audit import (
+            UnresolvedFailureAttributionError,
+            resolve_failure_accounting,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tester, _, _, _ = self._make_tester(
+                Path(tmp),
+                budget=4.0,
+                fail_every=4,
+            )
+            tester.run()
+            run_dir = Path(tester.base_dir)
+            metadata = json.loads((run_dir / "metadata.json").read_text(encoding="utf-8"))
+
+            with self.assertRaises(UnresolvedFailureAttributionError):
+                resolve_failure_accounting(run_dir, metadata)
+
+            candidate = json.loads(
+                (run_dir / "false_positive_audit_candidates.jsonl")
+                .read_text(encoding="utf-8")
+                .strip()
+            )
+            (run_dir / "false_positive_audit_annotations.jsonl").write_text(
+                json.dumps({
+                    "audit_id": candidate["audit_id"],
+                    "label": "task_mismatch_false_positive",
+                    "reviewer": "test",
+                    "notes": "The model followed the conflicting destination command.",
+                }) + "\n",
+                encoding="utf-8",
+            )
+
+            accounting = resolve_failure_accounting(run_dir, metadata)
+            self.assertEqual(accounting.raw_oracle_positives, 1)
+            self.assertEqual(accounting.reportable_failures, 0)
+            self.assertEqual(accounting.task_mismatch_false_positives, 1)
 
     def test_infrastructure_failure_propagates_without_valid_metadata(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -204,6 +257,7 @@ class InstructionCounterfactualTestingTest(unittest.TestCase):
                 "TIME_BUDGET_MINUTES": "17",
                 "MIN_NPC_COUNT": "0",
                 "MAX_NPC_COUNT": "3",
+                "VLADFUZZ_PROXY": "",
             })
 
             subprocess.run(["bash", str(script)], cwd=project_root, env=env, check=True)

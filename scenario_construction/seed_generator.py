@@ -10,6 +10,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scenario.carla_scenario import CarlaScenario
+from vladfuzz_runtime.carla_connection import resolve_carla_connection
 from vladfuzz_runtime.model_registry import bootstrap_model_environment
 
 
@@ -63,8 +64,11 @@ def build_scenario_manager_kwargs(
     model,
     dynamic_filter,
 ):
+    connection = resolve_carla_connection()
     kwargs = {
         "host": host,
+        "port": connection.rpc_port,
+        "tm_port": connection.tm_port,
         "tm_seed": tm_seed,
         "timeout": timeout,
         "frame_rate": frame_rate,
@@ -241,7 +245,7 @@ def main():
     parser.add_argument("--min-target-distance", type=float, default=30)
     parser.add_argument("--max-route-distance", type=float, default=100)
     parser.add_argument("--gpu-id", type=int, default=0)
-    parser.add_argument("--host", default="localhost")
+    parser.add_argument("--host", default=resolve_carla_connection().host)
     parser.add_argument("--tm-seed", type=int, default=0)
     parser.add_argument("--timeout", type=float, default=20)
     parser.add_argument("--frame-rate", type=int, default=20)

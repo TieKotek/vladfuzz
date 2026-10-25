@@ -5,10 +5,18 @@ import argparse
 import csv
 import json
 import re
+import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from vladfuzz_runtime.instruction_cf_audit import resolve_failure_accounting, scoped_instruction_cf_runs
 
 
 BASELINE_ORDER = {
@@ -88,9 +96,14 @@ def _collect_local_runs(results_root: Path) -> List[RunRow]:
     rows: List[RunRow] = []
     for root_name in ("vladfuzz", "random", "instruction_counterfactual"):
         root = results_root / root_name
-        if not root.exists():
+        scoped_runs = scoped_instruction_cf_runs() if root_name == "instruction_counterfactual" else None
+        if not root.exists() and scoped_runs is None:
             continue
-        for metadata_path in sorted(root.glob("*/*/metadata.json")):
+        metadata_paths = (
+            [Path(run) / "metadata.json" for run in scoped_runs]
+            if scoped_runs is not None else root.glob("*/*/metadata.json")
+        )
+        for metadata_path in sorted(metadata_paths):
             run_dir = metadata_path.parent
             try:
                 metadata = _load_json(metadata_path)
@@ -103,7 +116,7 @@ def _collect_local_runs(results_root: Path) -> List[RunRow]:
                 continue
             baseline = _baseline_from_method(str(config.get("method") or ""), root_name)
             executions = _safe_int(metadata.get("total_simulations_executed"))
-            failures = _safe_int(metadata.get("total_failures_detected"))
+            failures = resolve_failure_accounting(run_dir, metadata).reportable_failures
             rows.append(
                 RunRow(
                     model=model,

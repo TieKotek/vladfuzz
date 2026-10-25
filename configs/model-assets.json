@@ -60,9 +60,14 @@
         "config.json",
         "model.safetensors",
         "modeling_internvl_chat.py",
+        "conversation.py",
+        "processor_config.json",
         "preprocessor_config.json",
         "tokenizer_config.json"
-      ]
+      ],
+      "file_aliases": {
+        "processor_config.json": "preprocessor_config.json"
+      }
     },
     {
       "id": "bevdriver-llama-base",
@@ -102,9 +107,11 @@
       ],
       "required_files": [
         "config.json",
-        "model.safetensors",
         "tokenizer_config.json",
         "vocab.txt"
+      ],
+      "required_file_alternatives": [
+        ["model.safetensors", "pytorch_model.bin"]
       ]
     },
     {

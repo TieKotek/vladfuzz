@@ -7,6 +7,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Load project settings before assigning launcher defaults.
+# shellcheck source=scripts/load_env.sh
+source "$PROJECT_ROOT/scripts/load_env.sh"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 MODEL="${MODEL:-simlingo}"
 GPU_ID="${GPU_ID:-0}"
@@ -17,6 +21,8 @@ COMMAND_INDEX="${COMMAND_INDEX:-1}"
 MUTATION_DEPTH="${MUTATION_DEPTH:-1}"
 SUCCESS_DISTANCE="${SUCCESS_DISTANCE:-5.0}"
 RANDOM_SEED="${RANDOM_SEED:-0}"
+LLM_PROVIDER="${LLM_PROVIDER:-deepseek}"
+LLM_MODEL="${LLM_MODEL:-deepseek-v4-flash}"
 
 cd "$PROJECT_ROOT"
 
@@ -44,4 +50,6 @@ echo "Running LocalFuzzer smoke test with command ${COMMAND_INDEX}: ${INSTRUCTIO
   --mutation-depth "$MUTATION_DEPTH" \
   --success-distance "$SUCCESS_DISTANCE" \
   --gpu-id "$GPU_ID" \
+  --llm-provider "$LLM_PROVIDER" \
+  --llm-model "$LLM_MODEL" \
   --random-seed "$RANDOM_SEED"

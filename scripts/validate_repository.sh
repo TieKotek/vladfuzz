@@ -11,7 +11,9 @@ if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
 fi
 
 cd "$PROJECT_ROOT"
-bash -n scripts/*.sh
+for script in scripts/*.sh; do
+  bash -n "$script"
+done
 "$PYTHON_BIN" -m compileall -q \
   backends evaluation scenario scenario_construction \
   vladfuzz_runtime vladfuzz_workflows tools scripts

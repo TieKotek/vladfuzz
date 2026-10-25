@@ -3,6 +3,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Load project settings before assigning launcher defaults.
+# shellcheck source=scripts/load_env.sh
+source "$PROJECT_ROOT/scripts/load_env.sh"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 EXPERIMENT_ROOT="${EXPERIMENT_ROOT:-results/rq2/runs}"
 DRIVEFUZZ_SRC="${DRIVEFUZZ_SRC:-$PROJECT_ROOT/baselines/drivefuzz/src}"

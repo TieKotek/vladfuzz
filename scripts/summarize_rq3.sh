@@ -3,6 +3,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Load project settings before assigning launcher defaults.
+# shellcheck source=scripts/load_env.sh
+source "$PROJECT_ROOT/scripts/load_env.sh"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 RESULTS_ROOT="${RESULTS_ROOT:-results}"
 MANIFEST="${MANIFEST:-configs/rq3_manifest.jsonl}"

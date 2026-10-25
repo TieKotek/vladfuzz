@@ -12,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from vladfuzz_runtime.failure_analysis import FAILURE_CATEGORIES, categorize_failure_reason
+from vladfuzz_runtime.instruction_cf_audit import resolve_failure_accounting, scoped_instruction_cf_runs
 
 
 DRIVEFUZZ_OUT_RE = re.compile(r"^out-drivefuzz(?:-selected)?-(?P<model>[^-]+)-(?P<suffix>.+)$")
@@ -94,10 +95,15 @@ def _empty_failure_stats() -> Dict[str, int]:
     return stats
 
 
-def _local_failure_breakdown(failure_dir: Path) -> Tuple[Dict[str, int], Optional[float]]:
+def _local_failure_breakdown(
+    failure_dir: Path,
+    allowed_artifacts=None,
+) -> Tuple[Dict[str, int], Optional[float]]:
     stats = _empty_failure_stats()
     first_failure_epoch = None
     for result_path in sorted(failure_dir.glob("*/result.json")):
+        if allowed_artifacts is not None and result_path.parent.name not in allowed_artifacts:
+            continue
         try:
             result = _load_json(result_path)
         except (OSError, json.JSONDecodeError):
@@ -158,13 +164,30 @@ def _collect_local_runs(root: Path, method_filter: Optional[str] = None) -> List
         method_family = _local_method_family(method)
         if not config.get("vla_model") or method_family is None:
             continue
+        scoped_runs = scoped_instruction_cf_runs()
+        if (
+            method_family == "instruction_counterfactual"
+            and scoped_runs is not None
+            and str(run_dir.resolve()) not in scoped_runs
+        ):
+            continue
         if method_filter and method_filter not in method:
             continue
 
         simulations = int(metadata.get("total_simulations_executed", 0))
-        failures = int(metadata.get("total_failures_detected", 0))
+        accounting = resolve_failure_accounting(run_dir, metadata)
+        failures = accounting.reportable_failures
         start_time = _parse_iso_timestamp(metadata.get("start_time"))
-        failure_stats, first_failure_epoch = _local_failure_breakdown(run_dir / "failures")
+        allowed_artifacts = None
+        if (
+            method_family == "instruction_counterfactual"
+            and metadata.get("failure_attribution_schema_version") is not None
+        ):
+            allowed_artifacts = set(accounting.reportable_failure_artifacts)
+        failure_stats, first_failure_epoch = _local_failure_breakdown(
+            run_dir / "failures",
+            allowed_artifacts,
+        )
         if first_failure_epoch is not None and start_time is not None:
             ttf = max(0.0, first_failure_epoch - start_time.timestamp())
         else:
@@ -407,7 +430,7 @@ def _failure_breakdown(rows: List[Dict]) -> List[Dict]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Summarize RQ2 baseline and VLAD-Fuzz experiment results.")
     parser.add_argument("--experiment-root", default="results/rq2/runs", help="Root containing VLAD-Fuzz/random metadata runs.")
-    parser.add_argument("--drivefuzz-src", default="baselines/drivefuzz/src", help="DriveFuzz src directory containing out-drivefuzz-* runs.")
+    parser.add_argument("--drivefuzz-src", default="baseline-repo/drivefuzz-master/src", help="DriveFuzz src directory containing out-drivefuzz-* runs.")
     parser.add_argument("--drivefuzz-results-root", default="results/rq2/runs/drivefuzz", help="Root containing DriveFuzz runs/ and seeds/ directories.")
     parser.add_argument("--output-dir", default="results/rq2/summary", help="Output directory for CSV summaries.")
     args = parser.parse_args()

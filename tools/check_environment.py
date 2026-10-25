@@ -18,7 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from vladfuzz_runtime.model_assets import resolve_model_root
+from vladfuzz_runtime.model_assets import resolve_model_root, validate_model_asset
 from vladfuzz_runtime.model_registry import MODEL_SPECS
 
 
@@ -42,6 +42,7 @@ REPOSITORY_PATHS = (
 )
 
 CORE_IMPORTS = {
+    "dotenv": "python-dotenv",
     "cv2": "opencv-python-headless",
     "deap": "deap",
     "filterpy": "filterpy",
@@ -183,21 +184,48 @@ def check_models(models: Iterable[str]) -> list[CheckResult]:
     model_root = resolve_model_root()
     for asset in _selected_assets(models):
         destination = model_root / asset["destination"]
-        if asset["method"] == "huggingface_snapshot":
-            missing = [name for name in asset.get("required_files", []) if not (destination / name).is_file()]
-            if not destination.is_dir() or missing:
-                detail = f"missing or incomplete: {destination}"
-                if missing:
-                    detail += f" ({', '.join(missing)})"
-                results.append(CheckResult("ERROR", f"asset/{asset['id']}", detail))
-            else:
-                results.append(CheckResult("OK", f"asset/{asset['id']}", str(destination)))
-        else:
-            results.append(_path_result(f"asset/{asset['id']}", destination))
+        errors = validate_model_asset(asset, model_root)
+        results.append(CheckResult(
+            "ERROR" if errors else "OK",
+            f"asset/{asset['id']}",
+            "; ".join(errors) if errors else str(destination),
+        ))
     return results
 
 
-def check_gpu() -> list[CheckResult]:
+def check_vulkan() -> CheckResult:
+    if shutil.which("vulkaninfo") is None:
+        return CheckResult("ERROR", "Vulkan", "vulkaninfo not found; install Vulkan tools")
+    try:
+        completed = subprocess.run(
+            ["vulkaninfo", "--summary"], capture_output=True, text=True,
+            check=False, timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        return CheckResult("ERROR", "Vulkan", str(error))
+    output = completed.stdout.strip()
+    if completed.returncode != 0:
+        return CheckResult("ERROR", "Vulkan", (completed.stderr.strip() or output)[-2000:])
+    device_fields = [line.partition("=") for line in output.splitlines()]
+    has_nvidia_device = any(
+        separator and (
+            (key.strip() == "deviceName" and "nvidia" in value.lower())
+            or (key.strip() == "vendorID" and value.strip().lower() == "0x10de")
+        )
+        for key, separator, value in device_fields
+    )
+    if not has_nvidia_device:
+        return CheckResult(
+            "ERROR", "Vulkan",
+            "Vulkan initialized but no NVIDIA device was listed; check the NVIDIA ICD.",
+        )
+    return CheckResult(
+        "OK", "Vulkan",
+        "NVIDIA Vulkan device detected; a CARLA camera smoke test is still required.",
+    )
+
+
+def check_gpu(gpu_id: int = 0) -> list[CheckResult]:
     results = []
     if shutil.which("nvidia-smi") is None:
         results.append(CheckResult("ERROR", "NVIDIA runtime", "nvidia-smi not found"))
@@ -210,20 +238,23 @@ def check_gpu() -> list[CheckResult]:
         completed = subprocess.run(command, capture_output=True, text=True, check=False)
         detail = completed.stdout.strip() or completed.stderr.strip()
         results.append(CheckResult("OK" if completed.returncode == 0 else "ERROR", "NVIDIA runtime", detail))
-    if shutil.which("vulkaninfo") is None:
-        results.append(CheckResult("WARN", "Vulkan", "vulkaninfo not found; install Vulkan tools and verify the NVIDIA ICD"))
-    else:
-        results.append(CheckResult("OK", "Vulkan", "vulkaninfo available"))
+    results.append(check_vulkan())
     try:
         import torch
     except ImportError:
         return results
     if torch.cuda.is_available():
+        if not 0 <= gpu_id < torch.cuda.device_count():
+            results.append(CheckResult(
+                "ERROR", "PyTorch CUDA",
+                f"GPU_ID={gpu_id} is outside the {torch.cuda.device_count()} visible CUDA devices",
+            ))
+            return results
         results.append(
             CheckResult(
                 "OK",
                 "PyTorch CUDA",
-                f"torch {torch.__version__}, CUDA {torch.version.cuda}, {torch.cuda.get_device_name(0)}",
+                f"torch {torch.__version__}, CUDA {torch.version.cuda}, logical GPU {gpu_id}: {torch.cuda.get_device_name(gpu_id)}",
             )
         )
     else:
@@ -248,6 +279,10 @@ def parse_args() -> argparse.Namespace:
         help="Backend to check; repeat for multiple backends. Defaults to all backends.",
     )
     parser.add_argument(
+        "--gpu-id", type=int, default=0,
+        help="Logical CUDA device index after CUDA_VISIBLE_DEVICES filtering (default: 0).",
+    )
+    parser.add_argument(
         "--repository-only",
         action="store_true",
         help="Check only files that belong in the source repository.",
@@ -263,7 +298,7 @@ def main() -> int:
         results.extend(check_carla())
         results.extend(check_packages(models))
         results.extend(check_models(models))
-        results.extend(check_gpu())
+        results.extend(check_gpu(args.gpu_id))
 
     for result in results:
         print(f"[{result.level:<5}] {result.label}: {result.detail}")

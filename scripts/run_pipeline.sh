@@ -4,6 +4,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Load project settings before assigning launcher defaults.
+# shellcheck source=scripts/load_env.sh
+source "$PROJECT_ROOT/scripts/load_env.sh"
+
 # shellcheck source=scripts/load_env.sh
 source "$SCRIPT_DIR/load_env.sh"
 
@@ -14,6 +18,7 @@ MANAGE_CARLA="${MANAGE_CARLA:-1}"
 PYTHON_BIN="${PYTHON_BIN:-python}"
 TEST_CASES_ROOT="${TEST_CASES_ROOT:-test_cases/quickstart}"
 MANIFEST="${MANIFEST:-$TEST_CASES_ROOT/manifest.jsonl}"
+OUTPUT_ROOT="${OUTPUT_ROOT:-results/quickstart/vladfuzz}"
 
 cd "$PROJECT_ROOT"
 "$PYTHON_BIN" tools/check_environment.py --model "$MODEL"
@@ -56,4 +61,5 @@ MANIFEST="$MANIFEST" \
 MANIFEST_ID="${SCENARIO_ID}/seed_1" \
 NUM_COMMANDS=1 \
 TIME_BUDGET_MINUTES="$TIME_BUDGET_MINUTES" \
+OUTPUT_ROOT="$OUTPUT_ROOT" \
 "$SCRIPT_DIR/run_vladfuzz.sh"

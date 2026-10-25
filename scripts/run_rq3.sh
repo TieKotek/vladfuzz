@@ -4,6 +4,10 @@ set -euo pipefail
 # Run one RQ3 ablation campaign selected by CONFIG.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Load project settings before assigning launcher defaults.
+# shellcheck source=scripts/load_env.sh
+source "$PROJECT_ROOT/scripts/load_env.sh"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 CONFIG="${CONFIG:-global_only}"
 MODEL="${MODEL:-simlingo}"

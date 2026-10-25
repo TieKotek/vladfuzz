@@ -75,16 +75,18 @@ class InstructionCounterfactualGenerationTest(unittest.TestCase):
 
         variants = build_counterfactual_batch(self.SOURCES[0], random_seed=7, scenario_index=3)
 
-        self.assertEqual(len(variants), 24)
+        self.assertEqual(len(variants), 32)
         self.assertEqual(
-            [item.family for item in variants[:6]],
+            [item.family for item in variants[:8]],
             [
                 InstructionFamily.PARAPHRASE,
                 InstructionFamily.AMBIGUITY,
                 InstructionFamily.NOISE,
+                InstructionFamily.MISLEADING,
                 InstructionFamily.PARAPHRASE,
                 InstructionFamily.AMBIGUITY,
                 InstructionFamily.NOISE,
+                InstructionFamily.MISLEADING,
             ],
         )
         self.assertEqual(
@@ -93,13 +95,15 @@ class InstructionCounterfactualGenerationTest(unittest.TestCase):
                 InstructionFamily.PARAPHRASE: 8,
                 InstructionFamily.AMBIGUITY: 8,
                 InstructionFamily.NOISE: 8,
+                InstructionFamily.MISLEADING: 8,
             },
         )
-        self.assertEqual(len({item.instruction for item in variants}), 24)
+        self.assertEqual(len({item.instruction for item in variants}), 32)
         self.assertNotIn(self.SOURCES[0], {item.instruction for item in variants})
 
-    def test_every_generated_instruction_preserves_ordered_maneuvers(self):
+    def test_goal_preserving_families_preserve_ordered_maneuvers(self):
         from vladfuzz_runtime.instruction_counterfactuals import (
+            InstructionFamily,
             build_counterfactual_batch,
             classify_rendered_instruction,
             parse_basic_instruction,
@@ -109,11 +113,60 @@ class InstructionCounterfactualGenerationTest(unittest.TestCase):
             expected = parse_basic_instruction(source).maneuvers
             with self.subTest(source=source):
                 variants = build_counterfactual_batch(source, random_seed=2, scenario_index=1)
-                self.assertEqual(len(variants), 24)
+                self.assertEqual(len(variants), 32)
                 for variant in variants:
-                    self.assertEqual(classify_rendered_instruction(variant.instruction), expected)
+                    self.assertEqual(variant.source_maneuvers, expected)
+                    if variant.family is InstructionFamily.MISLEADING:
+                        self.assertFalse(variant.goal_preserving)
+                        self.assertNotEqual(
+                            classify_rendered_instruction(variant.instruction),
+                            expected,
+                        )
+                    elif variant.family is InstructionFamily.AMBIGUITY:
+                        self.assertTrue(variant.goal_preserving)
+                        self.assertEqual(variant.maneuvers, tuple())
+                    else:
+                        self.assertTrue(variant.goal_preserving)
+                        self.assertEqual(
+                            classify_rendered_instruction(variant.instruction),
+                            expected,
+                        )
 
-    def test_ambiguity_retains_explicit_turn_action(self):
+    def test_misleading_variants_use_authority_framed_overrides(self):
+        from vladfuzz_runtime.instruction_counterfactuals import (
+            InstructionFamily,
+            build_counterfactual_batch,
+        )
+
+        variants = build_counterfactual_batch("Turn left at intersection.", random_seed=5)
+        misleading = [
+            variant.instruction.casefold()
+            for variant in variants
+            if variant.family is InstructionFamily.MISLEADING
+        ]
+
+        self.assertEqual(len(misleading), 8)
+        self.assertTrue(
+            all(
+                any(
+                    marker in instruction
+                    for marker in (
+                        "ignore",
+                        "override",
+                        "directive",
+                        "command",
+                        "disregard",
+                        "navigation",
+                        "operator",
+                        "priority",
+                    )
+                )
+                for instruction in misleading
+            )
+        )
+        self.assertTrue(all("right" in instruction for instruction in misleading))
+
+    def test_ambiguity_removes_explicit_turn_direction(self):
         from vladfuzz_runtime.instruction_counterfactuals import (
             InstructionFamily,
             build_counterfactual_batch,
@@ -126,6 +179,8 @@ class InstructionCounterfactualGenerationTest(unittest.TestCase):
                 for variant in variants
                 if variant.family is InstructionFamily.AMBIGUITY
             ]
+            self.assertTrue(all("left" not in instruction for instruction in ambiguity))
+            self.assertTrue(all("right" not in instruction for instruction in ambiguity))
             self.assertTrue(all("turn" in instruction for instruction in ambiguity))
 
     def test_compound_templates_use_natural_connector_casing(self):

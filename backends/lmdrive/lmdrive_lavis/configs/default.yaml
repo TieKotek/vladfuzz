@@ -4,7 +4,5 @@
  # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 
 env:
-  # For default users
-  # cache_root: "cache"
-  # For internal use with persistent storage
-  cache_root: "/export/home/.cache/lavis"
+  # Resolved relative to the bundled LMDrive root by the LAVIS initializer.
+  cache_root: ".cache/lavis"

@@ -12,6 +12,8 @@ from typing import Callable, Dict, Iterable, List, Mapping, Sequence
 
 import numpy as np
 
+from vladfuzz_runtime.instruction_cf_audit import resolve_failure_accounting
+
 
 WEATHER_FEATURES = (
     "cloudiness",
@@ -297,8 +299,21 @@ def _collect_local_failures(
     metadata = _load_json(run_dir / "metadata.json")
     static_path = _resolve_path(metadata["configuration"]["static_scenario"], repo_root)
     static = _load_json(static_path)
+    allowed_artifacts = None
+    if (
+        row["baseline"] == "Instruction-CF"
+        and metadata.get("failure_attribution_schema_version") is not None
+    ):
+        accounting = resolve_failure_accounting(run_dir, metadata)
+        allowed_artifacts = set(accounting.reportable_failure_artifacts)
+        if len(allowed_artifacts) != accounting.reportable_failures:
+            raise ValueError(
+                f"reportable Instruction-CF failures lack one-to-one artifact links: {run_dir}"
+            )
     cases = []
     for result_path in sorted((run_dir / "failures").glob("*/result.json")):
+        if allowed_artifacts is not None and result_path.parent.name not in allowed_artifacts:
+            continue
         result = _load_json(result_path)
         scenario_path = result_path.with_name("scenario_config.json")
         if not scenario_path.exists():
@@ -322,6 +337,10 @@ def _collect_local_failures(
                 source=result_path,
             )
         )
+    if allowed_artifacts is not None and {
+        case.source.parent.name for case in cases
+    } != allowed_artifacts:
+        raise ValueError(f"missing audited Instruction-CF failure artifacts: {run_dir}")
     return cases
 
 

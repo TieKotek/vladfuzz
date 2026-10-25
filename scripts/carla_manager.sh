@@ -132,7 +132,7 @@ carla_configure_headless_env() {
   if [[ "${VLADFUZZ_CARLA_MODE:-offscreen}" == "windowed" ]]; then
     return 0
   fi
-  export VK_ICD_FILENAMES="${VK_ICD_FILENAMES:-/usr/share/vulkan/icd.d/nvidia_icd.json}"
+  # Let Vulkan discover installed ICDs; explicit caller overrides are inherited.
   export SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-dummy}"
   export SDL_AUDIODRIVER="${SDL_AUDIODRIVER:-dummy}"
   export DISPLAY="${DISPLAY:-}"

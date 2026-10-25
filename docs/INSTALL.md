@@ -2,7 +2,7 @@
 
 ## Supported Host
 
-The reproduction package targets x86-64 Linux with:
+VLAD-Fuzz targets x86-64 Linux with:
 
 - an NVIDIA GPU capable of running CUDA;
 - an NVIDIA driver that supports the selected PyTorch CUDA runtime;
@@ -22,16 +22,15 @@ vulkaninfo --summary
 CUDA compute stack alone is insufficient because CARLA also renders camera
 sensors through Vulkan.
 
-LMDrive and BEVDriver use PyTorch CUDA 11.8 wheels. SimLingo uses a CUDA 12.8
-wheel. R570 is the corresponding CUDA 12.8 driver branch; NVIDIA also documents
-minor-version compatibility for CUDA 12.x on Linux drivers 525.60.13 or newer,
-with feature limitations. We recommend R570 or newer for SimLingo. In all
-cases, `nvidia-smi` showing a GPU is not sufficient; the post-install check also
-verifies PyTorch CUDA initialization.
+The GPU driver must support CUDA 11.8 for LMDrive/BEVDriver or CUDA 12.8 for
+SimLingo; see [NVIDIA's compatibility documentation](https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html).
+For containers, expose both compute and graphics support using
+[NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/docker-specialized.html).
 
-## Install CARLA 0.9.15
+## CARLA Prerequisite
 
-Download and extract the CARLA 0.9.15 packaged release. Import the additional
+Prepare a working CARLA 0.9.15 packaged release following the official
+installation instructions below. Import the additional
 maps when the package does not already contain the towns used by your tasks.
 The installation directory must contain `CarlaUE4.sh` and a `VERSION` file.
 
@@ -50,7 +49,12 @@ cp .env.example .env
 The repository scripts determine their root from their own file location.
 Do not export `PROJECT_ROOT` and do not add repository-specific paths to
 `~/.bashrc`. `.env` is the only project configuration file and is ignored by
-Git.
+Git. Both Python and shell entry points load the same dotenv format without
+executing it as shell code. Use literal `KEY=value` settings, not shell commands.
+Explicit process environment settings override `.env`; unset values use project
+defaults. Command-line flags take precedence over loaded settings.
+For example, `CUDA_VISIBLE_DEVICES=2 scripts/run_vladfuzz.sh` overrides a
+different value in `.env` without editing the file.
 
 The matching Python client (`carla==0.9.15`) is installed by every backend
 environment. The framework uses `PythonAPI/carla/agents` from the CARLA release
@@ -59,51 +63,34 @@ wheel. Do not combine a different CARLA server version with this client.
 
 ## Desktop And Headless Modes
 
-For interactive desktop debugging, CARLA may open its spectator window:
+Set `VLADFUZZ_CARLA_MODE=offscreen` in `.env` for a server without a display,
+or `windowed` for desktop debugging. Off-screen rendering produces RGB camera
+data; CARLA's no-rendering mode does not and cannot be used for VLA evaluation.
+See the [official rendering documentation](https://carla.readthedocs.io/en/0.9.15/adv_rendering_options/)
+for CARLA deployment details. Use the managed launcher in either mode:
 
 ```bash
-$CARLA_ROOT/CarlaUE4.sh
-```
-
-For servers without a display, use off-screen rendering:
-
-```bash
-$CARLA_ROOT/CarlaUE4.sh -RenderOffScreen -nosound
-```
-
-Off-screen rendering still produces RGB camera data. CARLA's no-rendering mode
-does not, so it cannot be used for VLA evaluation. CARLA 0.9.15 uses Vulkan and
-supports `-RenderOffScreen` without an emulated X display.
-
-Set the mode once in `.env` and use the managed launcher in both cases:
-
-```bash
-# VLADFUZZ_CARLA_MODE=offscreen  # headless server
-# VLADFUZZ_CARLA_MODE=windowed   # desktop debugging
 scripts/carla_manager.sh start
+scripts/carla_manager.sh stop
 ```
 
-The manager adds the corresponding Vulkan and off-screen arguments and waits
-for the RPC server. On a multi-GPU host, `CUDA_VISIBLE_DEVICES` selects the
+The manager supplies the rendering arguments and waits for the RPC server.
+
+## GPU And Concurrent Runs
+
+On a multi-GPU host, `CUDA_VISIBLE_DEVICES` selects the
 model GPU; `CARLA_GRAPHICS_ADAPTER` can select CARLA's Vulkan adapter. Verify
 the mapping locally because CUDA and Vulkan device numbering can differ.
+`GPU_ID` is a logical CUDA index after filtering: with
+`CUDA_VISIBLE_DEVICES=2`, use `GPU_ID=0`, not `GPU_ID=2`.
+The doctor accepts the same logical index with `--gpu-id 0`.
 
-For bare-metal execution, `NVIDIA_DRIVER_CAPABILITIES` is not a required shell
-variable. It belongs to NVIDIA Container Toolkit. A future container profile
-must request at least `compute,utility,graphics`; `display` is additionally
-needed only for a visible X11 or Wayland window.
-
-On bare metal, install the complete proprietary NVIDIA driver, including its
-Vulkan ICD. The same driver provides compute and graphics support; exporting
-`NVIDIA_DRIVER_CAPABILITIES=all` in `.bashrc` does not enable missing host
-driver components. If `nvidia-smi` succeeds but `vulkaninfo --summary` fails,
-fix the driver/Vulkan installation before debugging Python packages.
-
-References:
-
-- <https://carla.readthedocs.io/en/latest/adv_rendering_options/>
-- <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/docker-specialized.html>
-- <https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html>
+Concurrent jobs also need separate CARLA RPC, streaming, secondary, and traffic
+manager ports. Use `CARLA_ISOLATED=1` and RPC ports separated by at least three
+(for example 2200 and 2210), distinct `CARLA_TM_PORT` values, and unique
+`RUN_ID` values. Do not run the default non-isolated manager alongside other
+CARLA jobs: its cleanup assumes exclusive use and can stop them. These are
+resource-isolation settings, not changes to the paper's testing parameters.
 
 ## Create One Backend Environment
 
@@ -128,12 +115,33 @@ conda env create -f environments/bevdriver.yml
 conda activate vlad-bevdriver
 ```
 
-The PyTorch wheels include their CUDA runtime. A system CUDA toolkit is not
-required unless a user deliberately compiles an extension from source.
+The YAMLs install the required PyTorch and CUDA user-space packages. A system
+CUDA toolkit is not required unless a user deliberately compiles an extension
+from source.
 
 Conda YAMLs are the authoritative dependency specifications. Do not install a
 second top-level `requirements.txt` over them; that can silently replace the
 backend-specific PyTorch and CUDA stack.
+
+## Language Services
+
+Set the credentials and selectors in `.env`. Instruction generation and
+language mutation are separate services:
+
+| Workflow / provider | Selection | Credential |
+|---|---|---|
+| Instruction generation | `GENERATOR_MODEL` (see `scripts/generate_instructions.sh`) | `DASHSCOPE_API_KEY` |
+| Mutation / DeepSeek (default) | `LLM_PROVIDER=deepseek`, `LLM_MODEL=deepseek-v4-flash` | `DEEPSEEK_API_KEY` |
+| Mutation / Gemini | `LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-2.5-flash-lite` | `GEMINI_API_KEY` |
+| Mutation / Qwen | `LLM_PROVIDER=qwen`, `LLM_MODEL=qwen3-max` | `DASHSCOPE_API_KEY` |
+
+When switching mutation providers, change both `LLM_PROVIDER` and `LLM_MODEL`;
+adding a key alone does not switch services. The model names above are
+configurable examples; choose one available to your account at the endpoint
+used by that provider. `GENERATOR_MODEL` does not change the mutation model.
+Shell launchers read these settings from `.env`; direct Python fuzzing CLIs
+select the service with `--llm-provider` and `--llm-model`.
+The root-only installation check below does not require a language-service key.
 
 ## Download Model Assets
 
@@ -155,8 +163,41 @@ python tools/check_environment.py --model lmdrive
 ```
 
 The command checks the CARLA executable, CARLA navigation agents, Python client,
-backend imports, required model paths, NVIDIA runtime, Vulkan tools, and PyTorch
-CUDA initialization. Replace `lmdrive` with the selected backend.
+backend package availability, required model files/sizes, NVIDIA runtime,
+actual Vulkan initialization with an NVIDIA device, and PyTorch CUDA
+initialization. Replace `lmdrive` with the selected backend. The doctor does
+not load the driving model or prove camera rendering works: complete a short
+CARLA run before a long campaign. Use `prepare_models.py --verify-only` for
+full task-checkpoint hash verification, which reads the complete weight files.
+
+If the doctor reports no physical NVIDIA Vulkan device, resolve the CARLA/GPU
+deployment prerequisite using the official references above before proceeding.
+CUDA availability alone does not establish that CARLA can render camera data.
+
+### Short Closed-Loop Check
+
+After preparing model assets and passing the doctor, run one short scenario
+before a long campaign. This checks weight loading, sensor input, model
+inference, vehicle control, failure evaluation, and result output without
+calling a language API:
+
+```bash
+scripts/carla_manager.sh start
+
+MODEL=simlingo POP_SIZE=1 NGEN=0 MUTATION_DEPTH=0 \
+  SCENARIO_DURATION_FRAMES=100 MIN_NPC_COUNT=0 MAX_NPC_COUNT=0 \
+  OUTPUT_ROOT=results/validation/backend-smoke \
+  scripts/run_vladfuzz.sh
+
+scripts/carla_manager.sh stop
+```
+
+Activate the matching environment and replace `simlingo` for each backend.
+Use isolated ports as described above if another CARLA job is running. The
+100-frame cap can produce a normal timeout failure; successful environment
+validation requires actual driving frames and `error: false` in the execution
+result, not necessarily successful navigation. This root-only check does not
+validate language-API access, mutation operators, or multi-generation search.
 
 ## Configuration Reference
 
@@ -168,9 +209,12 @@ CUDA initialization. Replace `lmdrive` with the selected backend.
 | `DASHSCOPE_API_KEY` | instruction generation | Qwen-compatible DashScope API |
 | `DEEPSEEK_API_KEY` | default language fuzzing | DeepSeek API |
 | `GEMINI_API_KEY` | optional provider | Gemini API |
+| `LLM_PROVIDER` / `LLM_MODEL` | language mutation | Matching mutation provider and model ID |
+| `GENERATOR_MODEL` | instruction generation | DashScope instruction-generation VLM ID |
 | `HF_TOKEN` | gated downloads only | Hugging Face authentication |
 | `CUDA_VISIBLE_DEVICES` | optional | Model GPU selection |
 | `CARLA_GRAPHICS_ADAPTER` | optional | CARLA Vulkan adapter selection |
+| `CARLA_EXECUTABLE` | optional | Custom CARLA executable or launch wrapper; normally unset |
 
 Standard `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` variables are inherited if
 the host already uses them. VLAD-Fuzz does not create or override proxy values.

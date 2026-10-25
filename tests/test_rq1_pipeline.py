@@ -1,8 +1,11 @@
 import json
+import os
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
+from scenario_construction import generate_instructions
 from scenario_construction.generate_instructions import OUTPUT_BY_MODE, _prompt_for_mode
 from scenario_construction.instruction_generation import parse_instruction_response, structured_instruction_record
 from scenario_construction.scenario_regions import load_region_specs, select_region_specs
@@ -102,6 +105,29 @@ class SeedGeneratorPathTests(unittest.TestCase):
         self.assertEqual(kwargs["model_name"], "simlingo")
         self.assertIn("config_path", kwargs)
 
+    def test_seed_generator_uses_isolated_carla_ports(self):
+        with patch.dict(os.environ, {
+            "CARLA_ISOLATED": "1", "CARLA_PORT": "2250", "CARLA_TM_PORT": "8250",
+        }):
+            kwargs = build_scenario_manager_kwargs(
+                host="localhost", tm_seed=0, timeout=20, frame_rate=20,
+                gpu_id=0, model="simlingo", dynamic_filter=False,
+            )
+        self.assertEqual(kwargs["port"], 2250)
+        self.assertEqual(kwargs["tm_port"], 8250)
+        self.assertNotIn("model_name", kwargs)
+
+    def test_seed_generator_keeps_nonisolated_connection_defaults(self):
+        with patch.dict(os.environ, {
+            "CARLA_ISOLATED": "0", "CARLA_PORT": "2250", "CARLA_TM_PORT": "8250",
+        }):
+            kwargs = build_scenario_manager_kwargs(
+                host="localhost", tm_seed=0, timeout=20, frame_rate=20,
+                gpu_id=0, model="simlingo", dynamic_filter=False,
+            )
+        self.assertEqual(kwargs["port"], 2000)
+        self.assertIsNone(kwargs["tm_port"])
+
     def test_route_signature_compresses_repeated_maneuvers(self):
         signature = route_signature(
             {
@@ -132,6 +158,13 @@ class SeedGeneratorPathTests(unittest.TestCase):
 
 
 class InstructionGenerationTests(unittest.TestCase):
+    def test_python_instruction_entry_point_loads_project_settings(self):
+        with patch.object(generate_instructions, "load_project_env") as load_env, \
+                patch.object(generate_instructions, "iter_seed_dirs", return_value=[]), \
+                patch("sys.argv", ["generate_instructions.py", "--seeds-root", "unused"]):
+            generate_instructions.main()
+        load_env.assert_called_once_with()
+
     def test_output_file_names_are_explicit_about_prior_mode(self):
         self.assertEqual(OUTPUT_BY_MODE["route_prior"], "command_prior.json")
         self.assertEqual(OUTPUT_BY_MODE["no_prior"], "command_no_prior.json")

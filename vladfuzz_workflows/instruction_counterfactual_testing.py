@@ -19,7 +19,15 @@ from vladfuzz_runtime.infrastructure import (
     CARLA_INFRASTRUCTURE_EXIT_CODE,
     CarlaInfrastructureError,
 )
-from vladfuzz_runtime.instruction_counterfactuals import build_counterfactual_batch
+from vladfuzz_runtime.instruction_cf_audit import (
+    AUDIT_CANDIDATES_FILENAME,
+    VALID_FAILURE,
+    make_audit_id,
+)
+from vladfuzz_runtime.instruction_counterfactuals import (
+    InstructionFamily,
+    build_counterfactual_batch,
+)
 from vladfuzz_runtime.npc_count_range import sample_npc_count, validate_npc_count_range
 from vladfuzz_runtime.oracle import parse_oracle_checks
 from vladfuzz_runtime.run_metadata import create_run_dir, write_metadata
@@ -102,6 +110,7 @@ class InstructionCounterfactualTester:
         self.scenario_dir.mkdir(parents=True, exist_ok=True)
         self.generated_path = self.base_path / "generated_instructions.jsonl"
         self.execution_path = self.base_path / "execution_results.jsonl"
+        self.audit_candidates_path = self.base_path / AUDIT_CANDIDATES_FILENAME
         self._record_run_dir()
 
         if fuzzer_factory is None:
@@ -130,7 +139,9 @@ class InstructionCounterfactualTester:
             manifest_id=self.manifest_id,
         )
         self.simulation_count = 0
-        self.total_failures = 0
+        self.total_raw_oracle_positives = 0
+        self.total_provisionally_valid_failures = 0
+        self.total_pending_failure_attribution = 0
         self.scenario_batches_sampled = 0
         self.family_execution_counts = Counter()
         self.family_failure_counts = Counter()
@@ -186,7 +197,16 @@ class InstructionCounterfactualTester:
                     "template_id": variant.template_id,
                     "source_instruction": self.source_instruction,
                     "instruction": variant.instruction,
+                    "source_maneuvers": [
+                        maneuver.value for maneuver in variant.source_maneuvers
+                    ],
                     "maneuvers": [maneuver.value for maneuver in variant.maneuvers],
+                    "goal_preserving": variant.goal_preserving,
+                    "robustness_regime": (
+                        "goal_preserving"
+                        if variant.goal_preserving
+                        else "goal_conflicting"
+                    ),
                 },
             )
 
@@ -216,6 +236,9 @@ class InstructionCounterfactualTester:
                     self._write_final_metadata()
                     return
 
+                failure_artifacts_before = {
+                    path.name for path in self.failure_dir.iterdir() if path.is_dir()
+                }
                 safety_score, task_score, detailed_log = self.fuzzer.evaluate(
                     dynamic_scenario=scenario,
                     language_instruction=variant.instruction,
@@ -223,36 +246,86 @@ class InstructionCounterfactualTester:
                     failure_dir=str(self.failure_dir),
                     return_detailed_log=True,
                 )
+                failure_artifacts = sorted(
+                    path.name
+                    for path in self.failure_dir.iterdir()
+                    if path.is_dir() and path.name not in failure_artifacts_before
+                )
                 failures = self._failed_nodes(detailed_log)
+                failed = failures > 0
                 self.simulation_count += len(detailed_log)
-                self.total_failures += failures
+                self.total_raw_oracle_positives += failures
+                if failed and variant.goal_preserving:
+                    self.total_provisionally_valid_failures += failures
+                elif failed:
+                    self.total_pending_failure_attribution += failures
                 self.family_execution_counts[variant.family.value] += len(detailed_log)
                 self.family_failure_counts[variant.family.value] += failures
                 self.template_usage_counts[variant.template_id] += len(detailed_log)
                 self.executed_instructions.add(variant.instruction)
 
+                audit_id = None
+                attribution_status = "not_applicable"
+                if failed and variant.goal_preserving:
+                    attribution_status = VALID_FAILURE
+                elif failed:
+                    attribution_status = "pending_manual_review"
+                    audit_id = make_audit_id(
+                        self.manifest_id,
+                        scenario_index,
+                        variant_index,
+                    )
+
+                execution_record = {
+                    "execution_index": self.simulation_count,
+                    "scenario_index": scenario_index,
+                    "variant_index": variant_index,
+                    "family": variant.family.value,
+                    "family_index": variant.family_index,
+                    "template_id": variant.template_id,
+                    "source_instruction": self.source_instruction,
+                    "instruction": variant.instruction,
+                    "source_maneuvers": [
+                        maneuver.value for maneuver in variant.source_maneuvers
+                    ],
+                    "maneuvers": [maneuver.value for maneuver in variant.maneuvers],
+                    "goal_preserving": variant.goal_preserving,
+                    "robustness_regime": (
+                        "goal_preserving"
+                        if variant.goal_preserving
+                        else "goal_conflicting"
+                    ),
+                    "failed": failed,
+                    "failure_count": failures,
+                    "failure_attribution_status": attribution_status,
+                    "audit_id": audit_id,
+                    "failure_artifacts": failure_artifacts,
+                    "safety_score": safety_score,
+                    "task_score": task_score,
+                    "elapsed_seconds": round(self.clock() - self.start_time, 3),
+                    "detailed_log": detailed_log,
+                }
                 _append_jsonl(
                     self.execution_path,
-                    {
-                        "execution_index": self.simulation_count,
-                        "scenario_index": scenario_index,
-                        "variant_index": variant_index,
-                        "family": variant.family.value,
-                        "family_index": variant.family_index,
-                        "template_id": variant.template_id,
-                        "instruction": variant.instruction,
-                        "failed": failures > 0,
-                        "failure_count": failures,
-                        "safety_score": safety_score,
-                        "task_score": task_score,
-                        "elapsed_seconds": round(self.clock() - self.start_time, 3),
-                        "detailed_log": detailed_log,
-                    },
+                    execution_record,
                 )
+                if audit_id is not None:
+                    _append_jsonl(
+                        self.audit_candidates_path,
+                        {
+                            "audit_id": audit_id,
+                            "review_status": "pending_manual_review",
+                            "reason_for_review": (
+                                "The misleading family is goal-conflicting by construction; "
+                                "the oracle-positive execution must be attributed before matched-task reporting."
+                            ),
+                            **execution_record,
+                        },
+                    )
                 self.checkpoint_recorder.update(
                     now=self.clock(),
                     executions=self.simulation_count,
-                    failures=self.total_failures,
+                    failures=self.total_raw_oracle_positives,
                     extra={
                         "scenario_index": scenario_index,
                         "family": variant.family.value,
@@ -271,13 +344,22 @@ class InstructionCounterfactualTester:
             "actual_duration_seconds": round(end_time - self.start_time, 2),
             "target_duration_seconds": self.time_budget_seconds,
             "total_simulations_executed": self.simulation_count,
-            "total_failures_detected": self.total_failures,
+            "total_failures_detected": self.total_raw_oracle_positives,
+            "total_raw_oracle_positives": self.total_raw_oracle_positives,
+            "total_provisionally_valid_failures": self.total_provisionally_valid_failures,
+            "total_pending_failure_attribution": self.total_pending_failure_attribution,
+            "failure_attribution_schema_version": 1,
+            "failure_count_semantics": (
+                "total_failures_detected is the raw oracle-positive count; misleading positives "
+                "require manual attribution before matched-task reporting"
+            ),
             "failure_analysis": collect_failure_analysis(str(self.failure_dir)),
             "hourly_checkpoints": list(self.checkpoint_recorder.checkpoints),
             "scenario_batches_sampled": self.scenario_batches_sampled,
             "unique_instruction_count": len(self.executed_instructions),
             "family_execution_counts": dict(self.family_execution_counts),
             "family_failure_counts": dict(self.family_failure_counts),
+            "family_raw_oracle_positive_counts": dict(self.family_failure_counts),
             "template_usage_counts": dict(self.template_usage_counts),
             "configuration": {
                 "method": "instruction_counterfactual",
@@ -289,7 +371,18 @@ class InstructionCounterfactualTester:
                 "instruction": self.source_instruction,
                 "random_seed": self.random_seed,
                 "k_per_family": self.k,
-                "variant_families": ["paraphrase", "ambiguity", "noise"],
+                "variant_families": [family.value for family in InstructionFamily],
+                "goal_preserving_families": [
+                    family.value for family in InstructionFamily if family.goal_preserving
+                ],
+                "goal_conflicting_families": [InstructionFamily.MISLEADING.value],
+                "variants_per_complete_scenario_batch": self.k * len(InstructionFamily),
+                "protocol_reference": "ICR-Drive Algorithm 1 counterfactual family generation",
+                "baseline_control_execution": False,
+                "baseline_control_note": (
+                    "The source instruction defines the matched task; RQ2 counts failure-inducing "
+                    "counterfactual tests rather than ICR-Drive performance deltas."
+                ),
                 "min_npc_count": self.min_npc_count,
                 "max_npc_count": self.max_npc_count,
                 "scenario_duration_frames": self.scenario_duration_frames,

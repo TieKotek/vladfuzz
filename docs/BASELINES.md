@@ -13,6 +13,23 @@ These use the shared VLAD-Fuzz runtime and need no additional source checkout:
 - `scripts/run_rq3.sh`
 - `vladfuzz_workflows.ads_baseline_testing`
 
+### Instruction-CF
+
+Instruction-CF reimplements the four counterfactual families described by
+ICR-Drive: paraphrase, ambiguity, noise, and misleading. It deterministically
+samples eight variants per family and executes all 32 variants against the same
+scenario configuration. Paraphrase and noise target wording and surface form.
+Ambiguity can omit essential turning or lane-change directions; it is not
+universally goal-preserving. Misleading uses authority-framed directives that
+explicitly conflict with the source navigation intent.
+
+The source instruction defines the matched task in our failure-finding
+comparison. Unlike ICR-Drive's performance-delta evaluation, the workflow does
+not add a separate baseline control execution to each batch. Misleading
+oracle-positive executions are retained as audit candidates rather than being
+silently counted as matched-task failures. See `evaluation/rq2/README.md` for
+the required attribution step.
+
 ## Adapted DriveFuzz
 
 The modified DriveFuzz runtime used in the evaluation is bundled at:

@@ -1,4 +1,5 @@
 import os
+import hashlib
 from pathlib import Path
 from typing import Mapping, Optional, Union
 
@@ -9,6 +10,34 @@ DEFAULT_BERT_MODEL_DIR = DEFAULT_MODEL_ROOT / "shared" / "bert-base-uncased"
 REMOTE_BERT_MODEL_ID = "google-bert/bert-base-uncased"
 _BERT_METADATA_FILES = ("config.json", "vocab.txt")
 _BERT_WEIGHT_FILES = ("pytorch_model.bin", "model.safetensors")
+
+
+def validate_model_asset(asset: Mapping, model_root: Path, *, verify_hashes=False) -> list:
+    """Apply one asset contract in both preparation and environment checks."""
+    destination = model_root / asset["destination"]
+    errors = []
+    if asset["method"] == "huggingface_snapshot":
+        if not destination.is_dir():
+            return [f"missing directory: {destination}"]
+        for name in asset.get("required_files", []):
+            if not (destination / name).is_file():
+                errors.append(f"missing file: {destination / name}")
+        for alternatives in asset.get("required_file_alternatives", []):
+            if not any((destination / name).is_file() for name in alternatives):
+                errors.append(f"missing one of {alternatives}: {destination}")
+        return errors
+    if not destination.is_file():
+        return [f"missing file: {destination}"]
+    if asset.get("size") is not None and destination.stat().st_size != asset["size"]:
+        return [f"size mismatch: {destination}"]
+    if verify_hashes and asset.get("sha256"):
+        digest = hashlib.sha256()
+        with destination.open("rb") as stream:
+            for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+                digest.update(block)
+        if digest.hexdigest() != asset["sha256"]:
+            errors.append(f"SHA-256 mismatch: {destination}")
+    return errors
 
 
 def resolve_model_root(env: Optional[Mapping[str, str]] = None) -> Path:

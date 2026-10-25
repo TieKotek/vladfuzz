@@ -5,10 +5,18 @@ import csv
 import hashlib
 import json
 import math
+import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from vladfuzz_runtime.instruction_cf_audit import resolve_failure_accounting
 
 MODELS = {'simlingo': 'SimLingo', 'lmdrive': 'LMDrive', 'bevdriver': 'BEVDriver'}
 METHODS = ('DriveFuzz', 'Instruction-CF', 'VLAD-Fuzz')
@@ -76,7 +84,9 @@ def read_run(row, repo_root, record_timezone):
             if required not in command:
                 raise ValueError(f'missing matched execution setting {required}: {root}')
     else:
-        n, f, excluded = meta['total_simulations_executed'], meta['total_failures_detected'], 0
+        n, excluded = meta['total_simulations_executed'], 0
+        accounting = resolve_failure_accounting(root, meta)
+        f = accounting.reportable_failures
         if n != raw_n or config['manifest_id'] != row['scenario_seed'] or config['vla_model'] != row['model']:
             raise ValueError(f'local source identity/count mismatch: {root}')
         elapsed = []
@@ -89,8 +99,11 @@ def read_run(row, repo_root, record_timezone):
             elapsed.append((timestamp - start).total_seconds())
         if method == 'Instruction-CF':
             records = [json.loads(line) for line in (root / 'execution_results.jsonl').read_text().splitlines() if line.strip()]
-            if len(records) != n or sum(bool(item['failed']) for item in records) != f:
+            raw_record_failures = sum(int(item.get('failure_count', 1)) for item in records if item['failed'])
+            if len(records) != n or raw_record_failures != accounting.raw_oracle_positives:
                 raise ValueError(f'counterfactual execution count mismatch: {root}')
+            if meta.get('failure_attribution_schema_version') is not None:
+                elapsed = list(accounting.reportable_elapsed_seconds)
     if f != expected_f or f > n or any(value > (end - start).total_seconds() + 1 for value in elapsed):
         raise ValueError(f'failure count or event-time mismatch: {root}')
     checkpoints = [json.loads(line) for line in (root / 'hourly_checkpoints.jsonl').read_text().splitlines() if line.strip()]

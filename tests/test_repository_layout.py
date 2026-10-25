@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import unittest
+import yaml
 from unittest.mock import patch
 from pathlib import Path
 
@@ -9,6 +10,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class RepositoryLayoutTests(unittest.TestCase):
+    def test_lavis_runtime_cache_is_repository_relative(self):
+        path = PROJECT_ROOT / "backends/lmdrive/lmdrive_lavis/configs/default.yaml"
+        config = yaml.safe_load(path.read_text(encoding="utf-8"))
+        self.assertEqual(config["env"]["cache_root"], ".cache/lavis")
+        self.assertFalse(Path(config["env"]["cache_root"]).is_absolute())
+
     def test_adapted_drivefuzz_source_is_bundled(self):
         source = PROJECT_ROOT / "baselines" / "drivefuzz" / "src"
 

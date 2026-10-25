@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import shutil
@@ -14,6 +13,11 @@ from typing import Any
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
+
+from vladfuzz_runtime.model_assets import validate_model_asset
+
 MANIFEST_PATH = REPOSITORY_ROOT / "configs" / "model-assets.json"
 
 
@@ -30,39 +34,18 @@ def resolve_model_root(value: str | None) -> Path:
     return root.resolve()
 
 
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
-            digest.update(block)
-    return digest.hexdigest()
-
-
 def verify_asset(asset: dict[str, Any], model_root: Path) -> list[str]:
-    destination = model_root / asset["destination"]
-    errors: list[str] = []
-    if asset["method"] == "huggingface_snapshot":
-        if not destination.is_dir():
-            return [f"missing directory: {destination}"]
-        for relative in asset.get("required_files", []):
-            required = destination / relative
-            if not required.is_file():
-                errors.append(f"missing file: {required}")
-        return errors
+    return validate_model_asset(asset, model_root, verify_hashes=True)
 
-    if not destination.is_file():
-        return [f"missing file: {destination}"]
-    expected_size = asset.get("size")
-    if expected_size is not None and destination.stat().st_size != expected_size:
-        errors.append(
-            f"size mismatch: {destination} "
-            f"(expected {expected_size}, got {destination.stat().st_size})"
-        )
-        return errors
-    expected_hash = asset.get("sha256")
-    if expected_hash and sha256(destination) != expected_hash:
-        errors.append(f"SHA-256 mismatch: {destination}")
-    return errors
+
+def materialize_file_aliases(asset: dict[str, Any], model_root: Path) -> None:
+    """Create explicitly declared metadata aliases without touching weights."""
+    destination = model_root / asset["destination"]
+    for alias, source in asset.get("file_aliases", {}).items():
+        target = destination / alias
+        original = destination / source
+        if not target.exists() and original.is_file():
+            shutil.copyfile(original, target)
 
 
 def huggingface_api():
@@ -157,8 +140,10 @@ def main() -> int:
     if not args.verify_only:
         model_root.mkdir(parents=True, exist_ok=True)
         for asset in selected:
+            materialize_file_aliases(asset, model_root)
             if verify_asset(asset, model_root):
                 download_asset(asset, model_root, offline=args.offline)
+                materialize_file_aliases(asset, model_root)
             else:
                 print(f"READY   {asset['id']}")
 

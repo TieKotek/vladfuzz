@@ -11,6 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scenario_construction.instruction_generation import structured_instruction_record
+from vladfuzz_runtime.project_env import load_project_env
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -121,6 +122,7 @@ def _modes_from_arg(mode: str):
 
 
 def main() -> None:
+    load_project_env()
     parser = argparse.ArgumentParser(description="Generate VLM driving instructions for seed scenarios.")
     parser.add_argument("--seeds-root", default="seeds")
     parser.add_argument("--mode", choices=["route_prior", "no_prior", "both"], default="both")

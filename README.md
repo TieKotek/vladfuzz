@@ -15,13 +15,13 @@ and result recording shared across all backends.
 
 <p align="center">
   <img src="docs/images/vladfuzz-framework.png" width="960"
-       alt="VLAD-Fuzz framework: route-prior-guided test-case generation followed by feedback-coordinated global scenario search and local language fuzzing">
+       alt="VLAD-Fuzz: validity-aware test-case construction and feedback-coordinated joint scenario-instruction fuzzing">
 </p>
 
 <p align="center"><sub>
-VLAD-Fuzz first constructs route-grounded VLA driving tasks, then coordinates
-global scenario search with local language fuzzing through closed-loop
-execution feedback.
+VLAD-Fuzz first constructs valid VLA driving test cases, then coordinates
+scenario exploration with scenario-conditioned instruction fuzzing through
+closed-loop execution feedback.
 </sub></p>
 
 ## What VLAD-Fuzz Does
@@ -32,20 +32,20 @@ VLAD-Fuzz tests both parts of that input space:
 
 <p align="center">
   <img src="docs/images/vla-driving-motivation.png" width="960"
-       alt="Motivating example showing route ambiguity and a scenario-grounded distance instruction that exposes a violation">
+       alt="Motivating examples showing instruction validity and failures exposed by joint scenario and instruction changes">
 </p>
 
 <p align="center"><sub>
-The reference route disambiguates the intended navigation task, while valid
-language constraints depend on the entities instantiated in the scenario.
+Route evidence and visual context support valid driving instructions; joint
+exploration exercises language requirements under applicable physical conditions.
 </sub></p>
 
-- **Route-grounded test-case generation** selects a feasible CARLA route,
-  summarizes its maneuvers, and combines that route prior with an ego-view
-  image to generate a natural driving instruction.
-- **Global Scenario Search** evolves weather and traffic-participant
+- **Validity-Aware VLA Test-Case Construction** selects a feasible CARLA route
+  and combines maneuver-level evidence with visual context through
+  evidence-guided instruction generation.
+- **Feedback-Guided Scenario Exploration** evolves weather and traffic-participant
   configurations using closed-loop safety and task feedback.
-- **Local Language Fuzzing** explores controlled instruction transformations,
+- **Scenario-Conditioned Instruction Fuzzing** explores controlled transformations,
   including paraphrasing, irrelevant conversation, speed constraints, and
   vehicle-distance constraints.
 - **Failure analysis** detects collisions, prohibited lane crossings,
@@ -88,8 +88,9 @@ VLAD-Fuzz targets:
 - [CARLA 0.9.15](https://github.com/carla-simulator/carla/releases);
 - Conda or Mamba;
 - sufficient GPU memory and disk space for the selected backend;
-- a DeepSeek or Gemini API key for language mutation;
-- a DashScope API key only when generating new route-grounded instructions.
+- an API key for the selected language-mutation provider (DeepSeek by default;
+  Gemini and Qwen are also supported);
+- a DashScope API key when generating new route-grounded instructions.
 
 Desktop and headless Linux systems are supported. A headless server must use
 CARLA's off-screen renderer because the tested models still require camera
@@ -143,11 +144,15 @@ CARLA_ROOT=/absolute/path/to/CARLA_0.9.15
 VLADFUZZ_CARLA_MODE=offscreen
 VLADFUZZ_MODEL_HOME=./models
 DEEPSEEK_API_KEY=your_key_here
+LLM_PROVIDER=deepseek
+LLM_MODEL=deepseek-v4-flash
 ```
 
 Use `VLADFUZZ_CARLA_MODE=windowed` for desktop debugging. Add
-`DASHSCOPE_API_KEY` when generating new instructions, or `GEMINI_API_KEY` when
-selecting Gemini as the mutation provider. `.env` is ignored by Git; no
+`DASHSCOPE_API_KEY` when generating new instructions. To use Gemini or Qwen
+for mutation, set both `LLM_PROVIDER` and `LLM_MODEL` and provide its matching
+key; see [language-service configuration](docs/INSTALL.md#language-services).
+`.env` is ignored by Git; no
 project settings need to be added to `~/.bashrc`.
 
 ### 4. Download and validate model assets
@@ -213,12 +218,19 @@ STATIC_SCENARIO=static_scenarios/town01_t_junction_1.json \
 SEEDS_PER_SCENARIO=5 \
   scripts/generate_seeds.sh
 
-# Generate route-prior-guided instructions. This requires DASHSCOPE_API_KEY.
+# Generate evidence-guided instructions. This requires DASHSCOPE_API_KEY.
 SEEDS_ROOT=test_cases MODE=route_prior NUM_COMMANDS=1 \
   scripts/generate_instructions.sh
 
 # Link scenarios, routes, images, and instructions into a run manifest.
 scripts/build_manifest.sh
+
+# Fuzz the generated inputs, not the bundled formal tasks.
+MODEL=simlingo SELECTED_ROOT=test_cases STATIC_ROOT=static_scenarios \
+MANIFEST=test_cases/manifest.jsonl \
+MANIFEST_ID=town01_t_junction_1/seed_1 TIME_BUDGET_MINUTES=10 \
+OUTPUT_ROOT=results/custom/vladfuzz \
+  scripts/run_vladfuzz.sh
 
 scripts/carla_manager.sh stop
 ```
@@ -239,7 +251,9 @@ TIME_BUDGET_MINUTES=10 \
 ```
 
 This complete pipeline requires both `DASHSCOPE_API_KEY` for instruction
-generation and the configured language-mutation provider key.
+generation and the configured language-mutation provider key. It writes
+generated inputs to `test_cases/quickstart/` and fuzzing results to
+`results/quickstart/vladfuzz/`, separate from the formal-task results.
 
 ## Other Testing Workflows
 
@@ -257,6 +271,13 @@ backends and shared failure criteria:
 Batch variants are available as `scripts/run_batch_*.sh`. The adapted
 DriveFuzz source, VLA adapter, and aligned failure checks are included under
 `baselines/drivefuzz/`; see [`docs/BASELINES.md`](docs/BASELINES.md).
+
+Instruction-CF follows ICR-Drive's four-family generation protocol, producing
+eight variants per family (paraphrase, ambiguity, noise, and misleading) in
+each complete scenario batch. Misleading and some ambiguity variants can
+invalidate the assigned task. Follow the scoped attribution and reporting steps in
+[`evaluation/rq2/README.md`](evaluation/rq2/README.md) before RQ2 summaries are
+generated.
 
 ## Repository Structure
 
@@ -305,6 +326,7 @@ baseline, ablation, and analysis workflow.
 - [Creating built-in and custom road regions](docs/STATIC_SCENARIOS.md)
 - [Architecture and backend integration](docs/ARCHITECTURE.md)
 - [Baseline implementations](docs/BASELINES.md)
+- [Reproduction settings and verification status](docs/REPRODUCTION.md)
 - [Contributing](CONTRIBUTING.md)
 - [Third-party code and licenses](THIRD_PARTY.md)
 

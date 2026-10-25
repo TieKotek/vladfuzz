@@ -1,4 +1,5 @@
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -121,12 +122,19 @@ class ModelAssetManifestTests(unittest.TestCase):
             "*.onnx",
             "*.safetensors",
             "*.pth",
+            "*.pth.*",
             "*.pt",
+            "*.pt.*",
             "*.r50",
         )
+        # Ignore downloaded assets/caches, but include unignored new source files.
+        files = subprocess.check_output(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+            cwd=PROJECT_ROOT,
+        ).decode().split("\0")
         found = []
         for pattern in forbidden_names:
-            found.extend(PROJECT_ROOT.glob(f"**/{pattern}"))
+            found.extend(name for name in files if name and Path(name).match(pattern))
         self.assertEqual(found, [])
 
 

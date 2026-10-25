@@ -1,6 +1,7 @@
 name: vlad-lmdrive
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   - python=3.9.23
   - pip
@@ -13,6 +14,9 @@ dependencies:
       - torchvision==0.15.2+cu118
       - torchaudio==2.0.2+cu118
       - torch-scatter==2.1.2+pt20cu118
+      - nvidia-cuda-runtime-cu11==11.8.89
+      - nvidia-cublas-cu11==11.11.3.6
+      - nvidia-cusparse-cu11==11.7.5.86
       - carla==0.9.15
       - numpy==1.26.4
       - opencv-python-headless==4.11.0.86
@@ -41,26 +45,24 @@ dependencies:
       - triton==2.0.0
       - diffusers==0.16.0
       - fairscale==0.4.4
-      - contexttimer==0.3.3
       - decord==0.6.0
       - einops==0.8.2
       - ftfy==6.3.1
       - iopath==0.1.10
+      - ipython==8.18.1
       - pandas==2.3.3
       - pycocoevalcap==1.2
       - pycocotools==2.0.11
-      - python-magic==0.4.27
       - sentencepiece==0.2.1
+      - protobuf==6.33.6
       - spacy==3.8.11
       - webdataset==0.2.100
       - pexpect==4.9.0
       - transforms3d==0.4.2
       - networkx==3.2.1
       - six==1.17.0
-      - rdp==0.8
       - dictor==0.1.12
       - tabulate==0.9.0
-      - easydict==1.13
       - python-dotenv==1.1.1
       - pyyaml==6.0.3
       - packaging==25.0

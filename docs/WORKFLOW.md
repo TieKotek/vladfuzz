@@ -55,6 +55,9 @@ scripts/generate_seeds.sh
 Without `DYNAMIC_FILTER=1`, this stage uses CARLA route and scenario utilities
 but does not load the VLA model. Each selected seed is written under
 `test_cases/<region-id>/seed_<n>/` with its dynamic scenario JSON and image.
+For isolated CARLA runs, this stage uses the same `CARLA_PORT` and
+`CARLA_TM_PORT` as the managed server. Set `CARLA_ISOLATED=1` and the connection
+settings in `.env` so all stages use the same server.
 
 ## 5. Generate Instructions
 
@@ -65,8 +68,11 @@ SEEDS_ROOT=test_cases MODE=route_prior NUM_COMMANDS=1 \
   scripts/generate_instructions.sh
 ```
 
-Use `MODE=both` only when reproducing the route-prior generation comparison.
-The route-prior output is `command_prior.json` inside each seed directory.
+Use `MODE=both` to compare evidence-guided and direct VLM generation.
+The existing CLI value `route_prior` writes `command_prior.json` inside each
+seed directory; these stable filenames do not name separate methods.
+Use `GENERATOR_MODEL` to override the instruction-generation VLM independently
+of the language-mutation provider/model used during fuzzing.
 
 ## 6. Build The Manifest
 
@@ -78,7 +84,30 @@ The resulting `test_cases/manifest.jsonl` links each static scenario, dynamic
 seed, image, route metadata, and generated instruction. It is ignored by Git
 because its paths correspond to local outputs.
 
-## Run The Frozen Formal Tasks
+## 7. Run VLAD-Fuzz
+
+Configure the mutation provider, model, and corresponding key as described in
+[`docs/INSTALL.md`](INSTALL.md#language-services), then choose the input corpus.
+
+### Newly Generated Inputs
+
+To fuzz the inputs generated in steps 3--6, explicitly select their root and
+manifest. Select a `MANIFEST_ID` from `test_cases/manifest.jsonl`:
+
+```bash
+MODEL=simlingo \
+SELECTED_ROOT=test_cases STATIC_ROOT=static_scenarios \
+MANIFEST=test_cases/manifest.jsonl \
+MANIFEST_ID=town01_t_junction_1/seed_1 \
+TIME_BUDGET_MINUTES=10 OUTPUT_ROOT=results/custom/vladfuzz \
+scripts/run_vladfuzz.sh
+```
+
+Both `SELECTED_ROOT` and `MANIFEST` are needed: the former locates the generated
+`command_prior.json`, while the latter selects its scenario and route. The
+separate output root prevents custom runs from mixing with formal-task results.
+
+### Bundled Formal Inputs
 
 The repository includes the ten formal tasks used for RQ2--RQ4 under
 `artifact_inputs/formal/test_cases/`. Their canonical manifest is
@@ -91,10 +120,7 @@ The 70-task generation corpus used for RQ1 is kept separately under
 some formal task instances differ from the corresponding RQ1 generation
 inputs.
 
-## 7. Run VLAD-Fuzz
-
-Set the LLM provider key used for language mutations, then select one manifest
-row:
+To run one of those bundled tasks using the default input paths:
 
 ```bash
 MODEL=simlingo \
@@ -103,23 +129,30 @@ TIME_BUDGET_MINUTES=240 \
 scripts/run_vladfuzz.sh
 ```
 
-Results are stored under `results/rq2/runs/vladfuzz/`. Run metadata records model,
-inputs, random seed, method, and parameters. Hourly checkpoint files allow
-long-running jobs to be audited and resumed by the supported batch wrappers.
+Bundled-task results default to `results/rq2/runs/vladfuzz/`. Run metadata records model,
+inputs, random seed, method, and parameters. New metadata also records the Git
+revision and dirty state, package versions, model-manifest checksum, and an
+allowlist of runtime path/GPU settings, never API keys. Hourly checkpoint files
+record campaign progress. Batch wrappers retry infrastructure failures; they
+do not restore an optimizer's exact in-memory search state from these files.
 
 ## One-Command Small Run
 
 After installation, `.env` setup, and model preparation, this command performs
 steps 2 through 7 for one region and one seed. It uses
-`test_cases/quickstart/` so existing test cases are not modified:
+`test_cases/quickstart/` so existing test cases are not modified, and writes
+results to `results/quickstart/vladfuzz/` rather than the formal-task directory:
 
 ```bash
 MODEL=simlingo SCENARIO_ID=town01_t_junction_1 \
   TIME_BUDGET_MINUTES=10 scripts/run_pipeline.sh
 ```
 
-The script stops only the CARLA process it manages. Set `MANAGE_CARLA=0` to use
-an already running server.
+Override `TEST_CASES_ROOT` and `OUTPUT_ROOT` to use different working directories.
+
+The default manager assumes exclusive use of CARLA on the machine and may
+stop other CARLA processes. Use `CARLA_ISOLATED=1` with distinct ports for
+concurrent jobs, or set `MANAGE_CARLA=0` to use an already running server.
 
 ## Batch And Evaluation Workflows
 
@@ -129,6 +162,13 @@ recovery. `run_random.sh`, `run_instruction_counterfactual.sh`, and
 DriveFuzz runtime is bundled under `baselines/drivefuzz/`; use
 `scripts/run_drivefuzz.sh` or `scripts/run_batch_drivefuzz.sh` to run it with
 the same VLA backends and execution criteria.
+
+Each complete Instruction-CF scenario batch contains 32 variants: eight from
+each of paraphrase, ambiguity, noise, and misleading. Some variants invalidate
+the task. Before reporting failures, follow `evaluation/rq2/README.md` to run
+the scoped semantic-change attribution rules and configure all downstream
+summaries to consume the same audit. The manual annotation path is documented
+separately; it is not a substitute for the scoped paper rules.
 
 RQ-specific programs under `evaluation/` consume generated `results/rqN/`
 trees. RQ2 keeps raw method executions under `results/rq2/runs/` and derived

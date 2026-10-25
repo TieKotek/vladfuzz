@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List
 
 from vladfuzz_runtime.failure_analysis import FAILURE_CATEGORIES
+from vladfuzz_runtime.instruction_cf_audit import resolve_failure_accounting
 
 
 def _load_json(path: Path) -> Dict:
@@ -21,7 +22,7 @@ def _rate(numerator: int, denominator: int) -> float:
 def _row_from_metadata(run_dir: Path, method: str, metadata: Dict) -> Dict:
     config = metadata.get("configuration", {})
     simulations = int(metadata.get("total_simulations_executed", 0))
-    failures = int(metadata.get("total_failures_detected", 0))
+    failures = resolve_failure_accounting(run_dir, metadata).reportable_failures
     failure_analysis = metadata.get("failure_analysis", {})
     duration = metadata.get("total_duration_seconds", metadata.get("actual_duration_seconds", 0.0))
 
